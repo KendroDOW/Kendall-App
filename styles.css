@@ -126,6 +126,7 @@ header {
   padding-top: 10px;
   padding-bottom: 220px;
   min-height: calc(100vh - 60px);
+  position: relative;
 }
 
 /* Bottom action area on home */
@@ -352,7 +353,58 @@ header {
   border-top: 2px solid var(--light);
 }
 
-/* Processing overlay */
+/* Barcode scanning styles */
+#barcode-preview-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: black;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+#barcode-video-container {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 4 / 3;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#barcode-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#barcode-guide {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 30%;
+  border: 4px dashed red;
+  border-radius: 12px;
+  pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+}
+
+#stop-barcode-scan {
+  margin-top: 24px;
+  width: 100%;
+  max-width: 320px;
+}
+
+/* Processing overlay (optional) */
 .processing-overlay {
   position: fixed;
   inset: 0;
