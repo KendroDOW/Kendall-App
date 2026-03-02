@@ -48,73 +48,60 @@ if (currentPage === 'home.html') {
   let currentDate = '';
   let currentLocation = '';
 
-  // Scan Receipt - open file picker
-  document.getElementById('scan-btn')?.addEventListener('click', () => {
-    console.log('Scan button clicked – opening file picker');
-    document.getElementById('file-input').click();
-  });
+  // Barcode scanning logic
+  let barcodeScannerActive = false;
 
-  // Handle file selection + preview
-  document.getElementById('file-input')?.addEventListener('change', (e) => {
-    const files = e.target.files;
-    if (files.length === 0) return;
-
-    const previewContainer = document.getElementById('preview-container');
-    const imagePreview = document.getElementById('image-preview');
-    imagePreview.innerHTML = ''; // Clear previous previews
-
+  document.getElementById('barcode-scan-btn')?.addEventListener('click', () => {
+    const previewContainer = document.getElementById('barcode-preview-container');
     previewContainer.style.display = 'block';
+    barcodeScannerActive = true;
 
-    Array.from(files).forEach(file => {
-      if (!file.type.startsWith('image/')) return; // Skip non-images
-
-      const img = document.createElement('img');
-      img.src = URL.createObjectURL(file);
-      img.style.maxWidth = '180px';
-      img.style.borderRadius = '8px';
-      img.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-      img.style.objectFit = 'cover';
-      imagePreview.appendChild(img);
+    Quagga.init({
+      inputStream: {
+        name: "Live",
+        type: "LiveStream",
+        target: document.querySelector('#barcode-video-container'),
+        constraints: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      },
+      locator: {
+        patchSize: "medium",
+        halfSample: true,
+      },
+      numOfWorkers: 2,
+      frequency: 10,
+      decoder: {
+        readers: ["upc_reader", "ean_reader", "code_128_reader"], // Grocery common types
+      },
+      locate: true,
+    }, function(err) {
+      if (err) {
+        console.error(err);
+        alert('Failed to start barcode scanner. Check camera permission.');
+        return;
+      }
+      Quagga.start();
     });
 
-    console.log(`Selected ${files.length} image(s) for processing`);
+    Quagga.onDetected((result) => {
+      const code = result.codeResult.code;
+      console.log('Barcode detected:', code);
+      alert('Barcode scanned: ' + code + '\n(Next: product lookup)');
+      Quagga.stop();
+      previewContainer.style.display = 'none';
+      barcodeScannerActive = false;
+      // TODO: Lookup product by code
+    });
   });
 
-  // Process button – run basic OCR
-  document.getElementById('process-images')?.addEventListener('click', async () => {
-    const files = document.getElementById('file-input').files;
-    if (files.length === 0) return alert('No images selected.');
-
-    const ocrResultDiv = document.getElementById('ocr-result');
-    const ocrTextDiv = document.getElementById('ocr-text');
-    ocrResultDiv.style.display = 'block';
-    ocrTextDiv.innerHTML = 'Starting OCR... (this may take 5–60 seconds per image)<br>';
-
-    let combinedText = '';
-
-    try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        ocrTextDiv.innerHTML += `<br>Processing image ${i+1}/${files.length}: ${file.name}<br>`;
-
-        const { data: { text } } = await Tesseract.recognize(
-          file,
-          'eng',
-          {
-            logger: m => console.log(m), // Progress in console
-          }
-        );
-
-        combinedText += `\n\n--- Image ${i+1}: ${file.name} ---\n${text.trim()}\n`;
-        ocrTextDiv.innerHTML += `Done. Extracted ${text.length} characters.<br>`;
-      }
-
-      ocrTextDiv.innerHTML = combinedText || 'No readable text could be extracted from the images.';
-      alert('OCR complete! Raw extracted text is shown below.');
-    } catch (err) {
-      console.error('OCR error:', err);
-      ocrTextDiv.innerHTML = 'OCR failed. Error: ' + err.message;
-      alert('OCR failed. Check console for details.');
+  document.getElementById('stop-barcode-scan')?.addEventListener('click', () => {
+    if (barcodeScannerActive) {
+      Quagga.stop();
+      document.getElementById('barcode-preview-container').style.display = 'none';
+      barcodeScannerActive = false;
     }
   });
 
