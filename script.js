@@ -74,16 +74,19 @@ if (currentPage === 'home.html') {
       numOfWorkers: 2,
       frequency: 10,
       decoder: {
-        readers: ["upc_reader", "ean_reader", "code_128_reader"], // Grocery common types
+        readers: ["upc_reader", "ean_reader", "code_128_reader", "ean_8_reader"], // Common grocery barcodes
       },
       locate: true,
     }, function(err) {
       if (err) {
-        console.error(err);
-        alert('Failed to start barcode scanner. Check camera permission.');
+        console.error('Quagga init error:', err);
+        alert('Failed to start barcode scanner. Check camera permission or try gallery fallback.');
+        previewContainer.style.display = 'none';
+        barcodeScannerActive = false;
         return;
       }
       Quagga.start();
+      console.log('Quagga started');
     });
 
     Quagga.onDetected((result) => {
@@ -93,7 +96,7 @@ if (currentPage === 'home.html') {
       Quagga.stop();
       previewContainer.style.display = 'none';
       barcodeScannerActive = false;
-      // TODO: Lookup product by code
+      // TODO: Lookup product by code and pre-fill form
     });
   });
 
