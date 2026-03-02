@@ -40,11 +40,11 @@
     <div id="barcode-preview-container" style="display:none; margin-top:24px; text-align:center;">
       <h3>Scan Barcode</h3>
       <p style="color:#555; margin-bottom:16px;">Align the barcode inside the red box. Zoom in if needed.</p>
-      <div id="barcode-video-container" style="position:relative; width:100%; max-width:480px; margin:0 auto;">
-        <video id="barcode-video" autoplay playsinline style="width:100%;"></video>
-        <div id="barcode-guide" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:80%; height:30%; border:4px dashed red; border-radius:8px; pointer-events:none; box-shadow:0 0 0 9999px rgba(0,0,0,0.5);"></div>
+      <div id="barcode-video-container" style="position:relative; width:100%; max-width:480px; margin:0 auto; background:#000; border-radius:12px; overflow:hidden;">
+        <video id="barcode-video" autoplay playsinline style="width:100%; height:auto;"></video>
+        <div id="barcode-guide" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:80%; height:30%; border:4px dashed red; border-radius:12px; pointer-events:none; box-shadow:0 0 0 9999px rgba(0,0,0,0.5);"></div>
       </div>
-      <button id="stop-barcode-scan" class="secondary" style="margin-top:16px; width:100%; max-width:320px;">Cancel Scan</button>
+      <button id="stop-barcode-scan" class="secondary" style="margin-top:24px; width:100%; max-width:320px;">Cancel Scan</button>
     </div>
 
     <!-- Manual Edit Form (hidden until "Manually Add Receipt" is clicked) -->
