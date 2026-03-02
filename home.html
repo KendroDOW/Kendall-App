@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DeductEats - Home</title>
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- idb library - for IndexedDB -->
+  <script src="https://unpkg.com/idb@7.1.1/build/umd.js"></script>
+  
+  <!-- Tesseract.js for OCR -->
+  <script src="https://unpkg.com/tesseract.js@v5.1.0/dist/tesseract.min.js"></script>
+</head>
+<body>
+
+  <nav id="top-nav">
+    <a href="home.html" class="nav-btn active">Home</a>
+    <a href="history.html" class="nav-btn">History</a>
+    <a href="learn.html" class="nav-btn">Learn</a>
+    <a href="settings.html" class="nav-btn">Settings</a>
+  </nav>
+
+  <header>
+    <div class="header-container">
+      <h1>DeductEats</h1>
+      <button id="logout-btn">Log Out</button>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <div class="hero-action bottom-action">
+      <button id="scan-btn" class="big-action">
+        <span class="camera-icon">📷</span> Scan Receipt
+      </button>
+      <button id="manual-btn" class="manual-link">Manually Add Receipt</button>
+    </div>
+
+    <!-- Image preview area (hidden until images selected) -->
+    <div id="preview-container" style="display:none; margin-top:24px; text-align:center;">
+      <h3>Selected Receipt Images</h3>
+      <div id="image-preview" style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:16px 0;"></div>
+      <button id="process-images" class="primary" style="width:100%; max-width:320px; margin:0 auto; display:block;">Process Receipt(s)</button>
+    </div>
+
+    <!-- OCR Result display – where extracted text appears -->
+    <div id="ocr-result" style="display:none; margin-top:24px; padding:16px; background:#f8f9fa; border-radius:8px; white-space:pre-wrap; font-family:monospace; max-height:500px; overflow-y:auto; line-height:1.5;">
+      <h3>Extracted Text (raw OCR output)</h3>
+      <div id="ocr-text"></div>
+    </div>
+
+    <!-- Manual Edit Form (hidden until "Manually Add Receipt" is clicked) -->
+    <section id="edit-section" style="display:none;">
+      <h2>Review & Edit Receipt</h2>
+
+      <div class="form-field">
+        <label for="receipt-location">Location</label>
+        <input type="text" id="receipt-location" placeholder="e.g. Walmart Saint George" />
+      </div>
+
+      <div class="form-field">
+        <label for="receipt-date">Date</label>
+        <input type="date" id="receipt-date" />
+      </div>
+
+      <h3>Items</h3>
+      <div id="items-container"></div>
+
+      <button id="add-item-btn" class="add-btn">+ Add Item</button>
+
+      <div class="edit-actions">
+        <button id="save-receipt" class="primary">Save Receipt</button>
+        <button id="cancel-edit" class="secondary">Cancel</button>
+      </div>
+    </section>
+  </main>
+
+  <footer id="social-footer">
+    <div class="social-icons">
+      <a href="#" title="Follow on X" class="social-link">𝕏</a>
+      <a href="#" title="Follow on Instagram" class="social-link">📸</a>
+      <a href="#" title="Follow on Facebook" class="social-link">f</a>
+    </div>
+    <small>© 2026 DeductEats • Saint George, Utah</small>
+  </footer>
+
+  <!-- Hidden file input for image upload -->
+  <input type="file" id="file-input" accept="image/*" multiple style="display:none;" />
+
+  <script src="script.js"></script>
+</body>
+</html>
