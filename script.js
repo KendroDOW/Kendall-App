@@ -78,6 +78,35 @@ async function getCurrentLocation() {
   }
 }
 
+// Suggest store name based on city + brand hint
+function suggestStoreName(city, brandHint = '') {
+  const lowerCity = city.toLowerCase();
+  const lowerBrand = brandHint.toLowerCase();
+
+  // Common chains in Saint George, UT area (expand this list later)
+  const utahChains = [
+    { name: 'Walmart', keywords: ['walmart', 'supercenter', 'walmart neighborhood market'] },
+    { name: "Smith's", keywords: ['smiths', 'smith\'s', 'kroger'] },
+    { name: 'Maceys', keywords: ['maceys', 'macey\'s'] },
+    { name: 'Harmons', keywords: ['harmons'] },
+    { name: 'Albertsons', keywords: ['albertsons', 'safeway'] },
+  ];
+
+  // If brand hint points to a chain
+  for (const chain of utahChains) {
+    if (lowerBrand.includes(chain.keywords[0])) {
+      return chain.name;
+    }
+  }
+
+  // Fallback from city
+  if (lowerCity.includes('saint george') || lowerCity.includes('st george')) {
+    return 'Walmart'; // Most common in area — customize as needed
+  }
+
+  return `${city} Grocery Store`;
+}
+
 // Login from welcome page (runs on index.html)
 document.getElementById('start-login-btn')?.addEventListener('click', () => {
   console.log('Login button clicked – setting flag and redirecting');
@@ -123,7 +152,7 @@ if (currentPage === 'home.html') {
     barcodeScannerActive = true;
 
     // Get location while scanning
-    currentLocation = await getCurrentLocation();
+    const cityFromGeo = await getCurrentLocation();
 
     Quagga.init({
       inputStream: {
@@ -181,8 +210,7 @@ if (currentPage === 'home.html') {
         deductible: ''
       }];
 
-      // Use geolocation if available, otherwise brand
-      currentLocation = currentLocation || (product.brand ? product.brand + ' Store' : 'Unknown Store');
+      currentLocation = suggestStoreName(cityFromGeo, product.brand);
       currentDate = new Date().toISOString().split('T')[0];
 
       const editSection = document.getElementById('edit-section');
@@ -219,7 +247,8 @@ if (currentPage === 'home.html') {
   manualBtn.addEventListener('click', async () => {
     currentItems = [];
     currentDate = new Date().toISOString().split('T')[0];
-    currentLocation = await getCurrentLocation(); // Get location for manual entry too
+    const cityFromGeo = await getCurrentLocation();
+    currentLocation = suggestStoreName(cityFromGeo);
     editSection.style.display = 'block';
     document.getElementById('barcode-scan-btn').style.display = 'none';
     document.getElementById('manual-btn').style.display = 'none';
