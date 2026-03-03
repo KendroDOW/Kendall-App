@@ -43,22 +43,35 @@ h1 { font-size: 2.2rem; margin-bottom: 8px; color: var(--primary); }
 
 .benefit-item strong { color: var(--accent); }
 
-.big-cta {
+.big-cta, .big-action {
   background: var(--accent);
   color: white;
-  font-size: 1.3rem;
-  padding: 18px 32px;
+  font-size: 1.4rem;
+  padding: 20px 32px;
   border: none;
   border-radius: 16px;
-  box-shadow: 0 6px 16px rgba(40,167,69,0.35);
+  box-shadow: 0 6px 18px rgba(40,167,69,0.3);
   cursor: pointer;
   width: 100%;
   max-width: 320px;
-  margin: 0 auto 24px;
-  display: block;
+  margin-bottom: 16px;
 }
 
-.disclaimer { font-size: 0.85rem; color: #6c757d; line-height: 1.4; }
+.camera-icon { font-size: 2rem; margin-right: 12px; }
+
+.manual-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 1.1rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.manual-link:hover { background: rgba(0,123,255,0.08); }
 
 /* Top nav */
 #top-nav {
@@ -141,36 +154,6 @@ header {
   text-align: center;
   z-index: 90;
 }
-
-.big-action {
-  background: var(--accent);
-  color: white;
-  font-size: 1.4rem;
-  padding: 20px 32px;
-  border-radius: 16px;
-  border: none;
-  box-shadow: 0 6px 18px rgba(40,167,69,0.3);
-  cursor: pointer;
-  width: 100%;
-  max-width: 320px;
-  margin-bottom: 16px;
-}
-
-.camera-icon { font-size: 2rem; margin-right: 12px; }
-
-.manual-link {
-  background: none;
-  border: none;
-  color: var(--primary);
-  font-size: 1.1rem;
-  text-decoration: underline;
-  cursor: pointer;
-  padding: 12px;
-  border-radius: 8px;
-  transition: background 0.2s;
-}
-
-.manual-link:hover { background: rgba(0,123,255,0.08); }
 
 /* Social footer */
 #social-footer {
@@ -356,84 +339,15 @@ header {
 /* Barcode scanning styles */
 #barcode-preview-container {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: black;
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-
-#barcode-video-container {
-  position: relative;
-  width: 100%;
-  max-width: 480px;
-  aspect-ratio: 4 / 3;
-  background: #000;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-#barcode-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-#barcode-guide {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
-  height: 30%;
-  border: 4px dashed red;
-  border-radius: 12px;
-  pointer-events: none;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
-}
-
-#stop-barcode-scan {
-  margin-top: 24px;
-  width: 100%;
-  max-width: 320px;
-}
-
-/* Processing overlay (optional) */
-.processing-overlay {
-  position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.65);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  z-index: 200;
-}
-
-
-/* ... (all your existing CSS remains) */
-
-/* Barcode scanning styles */
-#barcode-preview-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   background: black;
-  z-index: 100;
+  z-index: 200;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  color: white;
 }
 
 #barcode-video-container {
@@ -471,93 +385,7 @@ header {
   max-width: 320px;
 }
 
-/* Make sure manual form is still styled correctly */
-.form-field {
-  margin-bottom: 20px;
+/* Hide scan button when edit form is visible */
+#edit-section[style*="display: block"] ~ .hero-action #barcode-scan-btn {
+  display: none;
 }
-
-.form-field label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: var(--dark);
-}
-
-.form-field input,
-.form-field select {
-  width: 100%;
-  padding: 12px;
-  font-size: 1rem;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  box-sizing: border-box;
-}
-
-.item-block {
-  background: #f8f9fa;
-  border: 1px solid var(--light);
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-}
-
-.item-block h4 {
-  margin: 0 0 12px;
-  font-size: 1.1rem;
-  color: var(--primary);
-}
-
-.remove-item {
-  background: #dc3545;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.95rem;
-  margin-top: 12px;
-}
-
-.remove-item:hover {
-  background: #c82333;
-}
-
-.add-btn {
-  background: var(--highlight);
-  color: var(--dark);
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  margin: 16px 0;
-  cursor: pointer;
-  font-size: 1.1rem;
-  width: 100%;
-}
-
-.edit-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.primary {
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 14px;
-  border-radius: 10px;
-  flex: 1;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.secondary {
-  background: white;
-  color: var(--dark);
-  border: 1px solid #ced4da;
-  padding: 14px;
-  border-radius: 10px;
-  flex: 1;
-  cursor: pointer;
-}
-
