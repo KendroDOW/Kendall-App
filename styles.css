@@ -385,7 +385,8 @@ header {
   max-width: 320px;
 }
 
-/* Hide scan button when edit form is visible */
-#edit-section[style*="display: block"] ~ .hero-action #barcode-scan-btn {
-  display: none;
+/* Hide scan button when form is open */
+.hide-scan-btn {
+  display: none !important;
 }
+
