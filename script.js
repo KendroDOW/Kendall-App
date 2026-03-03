@@ -127,14 +127,18 @@ if (currentPage === 'home.html') {
       document.getElementById('barcode-preview-container').style.display = 'none';
       barcodeScannerActive = false;
 
-      alert('Barcode scanned: ' + code + '\nLooking up product...');
-
       const product = await lookupProductByBarcode(code);
 
-      // Pre-fill one item with product data
+      if (product.name === 'Product Not Found' || product.name === 'Error Looking Up Product') {
+        alert('Barcode scanned: ' + code + '\nProduct not found in database.\nPlease enter name manually.');
+      } else {
+        alert('Barcode scanned: ' + code + '\nFound: ' + product.name);
+      }
+
+      // Pre-fill one item
       currentItems = [{
         name: product.name,
-        price: 0, // User will enter
+        price: 0,
         category: suggestCategory(product.categoryTags),
         deductible: ''
       }];
@@ -148,7 +152,8 @@ if (currentPage === 'home.html') {
       document.getElementById('receipt-date').value = currentDate;
       renderItems();
 
-      alert('Product found: ' + product.name + '\nEdit price/deductible and save.');
+      // Focus on price field
+      document.querySelector('.price')?.focus();
     });
   });
 
