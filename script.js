@@ -105,7 +105,7 @@ if (currentPage === 'home.html') {
       numOfWorkers: 2,
       frequency: 10,
       decoder: {
-        readers: ["upc_reader", "ean_reader", "code_128_reader", "ean_8_reader"], // Common grocery barcodes
+        readers: ["upc_reader", "ean_reader", "code_128_reader", "ean_8_reader"],
       },
       locate: true,
     }, function(err) {
@@ -143,11 +143,12 @@ if (currentPage === 'home.html') {
         deductible: ''
       }];
 
-      currentLocation = product.brand || 'Unknown Store';
+      currentLocation = product.brand ? product.brand + ' Store' : 'Unknown Store';
       currentDate = new Date().toISOString().split('T')[0];
 
       const editSection = document.getElementById('edit-section');
       editSection.style.display = 'block';
+      document.getElementById('barcode-scan-btn').style.display = 'none'; // Hide scan button
       document.getElementById('receipt-location').value = currentLocation;
       document.getElementById('receipt-date').value = currentDate;
       renderItems();
@@ -162,6 +163,7 @@ if (currentPage === 'home.html') {
       Quagga.stop();
       document.getElementById('barcode-preview-container').style.display = 'none';
       barcodeScannerActive = false;
+      document.getElementById('barcode-scan-btn').style.display = 'block'; // Show scan button again
     }
   });
 
@@ -178,6 +180,7 @@ if (currentPage === 'home.html') {
     currentDate = new Date().toISOString().split('T')[0];
     currentLocation = '';
     editSection.style.display = 'block';
+    document.getElementById('barcode-scan-btn').style.display = 'none'; // Hide scan button
     document.getElementById('receipt-location').value = currentLocation;
     document.getElementById('receipt-date').value = currentDate;
     renderItems();
@@ -265,6 +268,7 @@ if (currentPage === 'home.html') {
       alert('Receipt saved!');
       editSection.style.display = 'none';
       itemsContainer.innerHTML = '';
+      document.getElementById('barcode-scan-btn').style.display = 'block'; // Show scan button again
     } catch (err) {
       console.error('Save error:', err);
       alert('Error saving receipt. Check console.');
@@ -274,6 +278,7 @@ if (currentPage === 'home.html') {
   cancelEditBtn.addEventListener('click', () => {
     editSection.style.display = 'none';
     itemsContainer.innerHTML = '';
+    document.getElementById('barcode-scan-btn').style.display = 'block'; // Show scan button again
   });
 }
 
