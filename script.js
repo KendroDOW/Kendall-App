@@ -148,7 +148,7 @@ if (currentPage === 'home.html') {
 
       const editSection = document.getElementById('edit-section');
       editSection.style.display = 'block';
-      document.getElementById('barcode-scan-btn').style.display = 'none'; // Hide scan button
+      document.getElementById('barcode-scan-btn').classList.add('hide-scan-btn'); // Hide scan button
       document.getElementById('receipt-location').value = currentLocation;
       document.getElementById('receipt-date').value = currentDate;
       renderItems();
@@ -163,7 +163,7 @@ if (currentPage === 'home.html') {
       Quagga.stop();
       document.getElementById('barcode-preview-container').style.display = 'none';
       barcodeScannerActive = false;
-      document.getElementById('barcode-scan-btn').style.display = 'block'; // Show scan button again
+      document.getElementById('barcode-scan-btn').classList.remove('hide-scan-btn'); // Show scan button again
     }
   });
 
@@ -180,7 +180,7 @@ if (currentPage === 'home.html') {
     currentDate = new Date().toISOString().split('T')[0];
     currentLocation = '';
     editSection.style.display = 'block';
-    document.getElementById('barcode-scan-btn').style.display = 'none'; // Hide scan button
+    document.getElementById('barcode-scan-btn').classList.add('hide-scan-btn'); // Hide scan button
     document.getElementById('receipt-location').value = currentLocation;
     document.getElementById('receipt-date').value = currentDate;
     renderItems();
@@ -268,7 +268,7 @@ if (currentPage === 'home.html') {
       alert('Receipt saved!');
       editSection.style.display = 'none';
       itemsContainer.innerHTML = '';
-      document.getElementById('barcode-scan-btn').style.display = 'block'; // Show scan button again
+      document.getElementById('barcode-scan-btn').classList.remove('hide-scan-btn'); // Show scan button again
     } catch (err) {
       console.error('Save error:', err);
       alert('Error saving receipt. Check console.');
@@ -278,7 +278,7 @@ if (currentPage === 'home.html') {
   cancelEditBtn.addEventListener('click', () => {
     editSection.style.display = 'none';
     itemsContainer.innerHTML = '';
-    document.getElementById('barcode-scan-btn').style.display = 'block'; // Show scan button again
+    document.getElementById('barcode-scan-btn').classList.remove('hide-scan-btn'); // Show scan button again
   });
 }
 
