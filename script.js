@@ -12,6 +12,37 @@ async function initDB() {
 }
 initDB();
 
+// Lookup product by barcode using Open Food Facts API
+async function lookupProductByBarcode(barcode) {
+  try {
+    const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+    const data = await response.json();
+
+    if (data.status === 1 && data.product) {
+      const product = data.product;
+      return {
+        name: product.product_name || product.generic_name || 'Unknown Product',
+        brand: product.brands || '',
+        categoryTags: product.categories_tags || product.categories || [],
+      };
+    } else {
+      return { name: 'Product Not Found', brand: '', categoryTags: [] };
+    }
+  } catch (err) {
+    console.error('Product lookup error:', err);
+    return { name: 'Error Looking Up Product', brand: '', categoryTags: [] };
+  }
+}
+
+// Simple category suggestion from tags
+function suggestCategory(tags) {
+  const tagString = (tags || []).join(' ').toLowerCase();
+  if (tagString.includes('gluten-free')) return 'Gluten-Free';
+  if (tagString.includes('keto') || tagString.includes('low-carb')) return 'Keto';
+  if (tagString.includes('low-sodium') || tagString.includes('reduced sodium')) return 'Low-Sodium';
+  return 'None';
+}
+
 // Login from welcome page (runs on index.html)
 document.getElementById('start-login-btn')?.addEventListener('click', () => {
   console.log('Login button clicked – setting flag and redirecting');
@@ -39,29 +70,6 @@ document.getElementById('logout-btn')?.addEventListener('click', () => {
     window.location.href = 'index.html';
   }
 });
-
-// Lookup product by barcode using Open Food Facts API
-async function lookupProductByBarcode(barcode) {
-  try {
-    const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
-    const data = await response.json();
-
-    if (data.status === 1 && data.product) {
-      const product = data.product;
-      return {
-        name: product.product_name || product.generic_name || 'Unknown Product',
-        brand: product.brands || '',
-        categoryTags: product.categories_tags || product.categories || [],
-        // Future: ingredients for advanced dietary classification
-      };
-    } else {
-      return { name: 'Product Not Found', brand: '', categoryTags: [] };
-    }
-  } catch (err) {
-    console.error('Product lookup error:', err);
-    return { name: 'Error Looking Up Product', brand: '', categoryTags: [] };
-  }
-}
 
 // Page-specific logic
 const currentPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -97,7 +105,7 @@ if (currentPage === 'home.html') {
       numOfWorkers: 2,
       frequency: 10,
       decoder: {
-        readers: ["upc_reader", "ean_reader", "code_128_reader", "ean_8_reader"],
+        readers: ["upc_reader", "ean_reader", "code_128_reader", "ean_8_reader"], // Common grocery barcodes
       },
       locate: true,
     }, function(err) {
@@ -112,45 +120,37 @@ if (currentPage === 'home.html') {
       console.log('Quagga started');
     });
 
-Quagga.onDetected(async (result) => {
-  const code = result.codeResult.code;
-  console.log('Barcode detected:', code);
-  Quagga.stop();
-  document.getElementById('barcode-preview-container').style.display = 'none';
-  barcodeScannerActive = false;
+    Quagga.onDetected(async (result) => {
+      const code = result.codeResult.code;
+      console.log('Barcode detected:', code);
+      Quagga.stop();
+      document.getElementById('barcode-preview-container').style.display = 'none';
+      barcodeScannerActive = false;
 
-  alert('Barcode scanned: ' + code + '\nLooking up product...');
+      alert('Barcode scanned: ' + code + '\nLooking up product...');
 
-  const product = await lookupProductByBarcode(code);
+      const product = await lookupProductByBarcode(code);
 
-  // Pre-fill one item with product data
-  currentItems = [{
-    name: product.name,
-    price: 0, // User will enter
-    category: suggestCategory(product.categoryTags),
-    deductible: ''
-  }];
+      // Pre-fill one item with product data
+      currentItems = [{
+        name: product.name,
+        price: 0, // User will enter
+        category: suggestCategory(product.categoryTags),
+        deductible: ''
+      }];
 
-  currentLocation = product.brand || 'Unknown Store';
-  currentDate = new Date().toISOString().split('T')[0];
+      currentLocation = product.brand || 'Unknown Store';
+      currentDate = new Date().toISOString().split('T')[0];
 
-  const editSection = document.getElementById('edit-section');
-  editSection.style.display = 'block';
-  document.getElementById('receipt-location').value = currentLocation;
-  document.getElementById('receipt-date').value = currentDate;
-  renderItems();
+      const editSection = document.getElementById('edit-section');
+      editSection.style.display = 'block';
+      document.getElementById('receipt-location').value = currentLocation;
+      document.getElementById('receipt-date').value = currentDate;
+      renderItems();
 
-  alert('Product found: ' + product.name + '\nEdit price/deductible and save.');
-});
-
-  // Simple category suggestion from tags
-  function suggestCategory(tags) {
-    const tagString = (tags || []).join(' ').toLowerCase();
-    if (tagString.includes('gluten-free')) return 'Gluten-Free';
-    if (tagString.includes('keto') || tagString.includes('low-carb')) return 'Keto';
-    if (tagString.includes('low-sodium') || tagString.includes('reduced sodium')) return 'Low-Sodium';
-    return 'None';
-  }
+      alert('Product found: ' + product.name + '\nEdit price/deductible and save.');
+    });
+  });
 
   document.getElementById('stop-barcode-scan')?.addEventListener('click', () => {
     if (barcodeScannerActive) {
@@ -160,7 +160,7 @@ Quagga.onDetected(async (result) => {
     }
   });
 
-  // Manual entry logic (unchanged)
+  // Manual entry logic
   const manualBtn = document.getElementById('manual-btn');
   const editSection = document.getElementById('edit-section');
   const itemsContainer = document.getElementById('items-container');
@@ -385,4 +385,3 @@ if (currentPage === 'history.html') {
     URL.revokeObjectURL(url);
   });
 }
-
