@@ -163,16 +163,16 @@ if (currentPage === 'home.html') {
           facingMode: "environment",
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          focusMode: "continuous", // Helps with auto-focus
+          focusMode: "continuous",
           aspectRatio: { ideal: 16 / 9 },
         },
       },
       locator: {
-        patchSize: "large", // Better detection on mobile
+        patchSize: "large",
         halfSample: true,
       },
-      numOfWorkers: navigator.hardwareConcurrency || 4, // Use all cores if possible
-      frequency: 5, // Lower frequency = less CPU, more stable on mobile
+      numOfWorkers: navigator.hardwareConcurrency || 4,
+      frequency: 5,
       decoder: {
         readers: ["upc_reader", "ean_reader", "code_128_reader", "ean_8_reader"],
       },
