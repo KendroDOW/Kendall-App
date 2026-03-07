@@ -133,7 +133,7 @@ document.getElementById('logout-btn')?.addEventListener('click', () => {
     localStorage.removeItem('deductEatsLoggedIn');
     window.location.href = 'index.html';
   }
-});
+}
 
 // Page-specific logic
 const currentPage = window.location.pathname.split('/').pop() || 'index.html';
