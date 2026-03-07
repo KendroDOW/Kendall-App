@@ -93,6 +93,7 @@ async function getCurrentLocation() {
 
     const { latitude, longitude } = position.coords;
 
+    // Reverse geocode using BigDataCloud (free, no key, fast)
     const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
     const data = await response.json();
 
@@ -161,7 +162,7 @@ document.getElementById('logout-btn')?.addEventListener('click', () => {
     localStorage.removeItem('deductEatsLoggedIn');
     window.location.href = 'index.html';
   }
-});
+}
 
 // Page-specific logic
 const currentPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -179,6 +180,7 @@ if (currentPage === 'home.html') {
     previewContainer.style.display = 'block';
     barcodeScannerActive = true;
 
+    // Get location while scanning
     const cityFromGeo = await getCurrentLocation();
 
     Quagga.init({
@@ -240,7 +242,6 @@ if (currentPage === 'home.html') {
 
       currentItems = [{
         name: product.name,
-        regularItem,
         price: 0,
         regularPrice: suggestedRegularPrice || 0,
         category: suggestCategory(product.categoryTags),
@@ -298,19 +299,28 @@ if (currentPage === 'home.html') {
   function renderItems() {
     itemsContainer.innerHTML = '';
     currentItems.forEach((item, index) => {
+      const hasRegularPrice = item.regularPrice > 0;
       const block = document.createElement('div');
       block.className = 'item-block';
       block.innerHTML = `
         <h4>Item ${index + 1}</h4>
         
         <div class="form-field">
-          <label>Item Name (Specialty)</label>
+          <label>Item Name</label>
           <input type="text" value="${item.name}" data-index="${index}" class="name" placeholder="e.g. Great Value Quick Oats Gluten Free" />
         </div>
         
         <div class="form-field">
-          <label>Specialty Price (in $)</label>
-          <input type="number" step="0.01" value="${item.price || ''}" data-index="${index}" class="price" placeholder="e.g. 6.99" />
+          <label>Price (per lb)</label>
+          <div class="input-with-dollar">
+            <span class="dollar-sign">$</span>
+            <input type="number" step="0.01" value="${item.price || ''}" data-index="${index}" class="price" placeholder="e.g. 6.99" />
+          </div>
+        </div>
+        
+        <div class="form-field ${hasRegularPrice ? '' : 'hidden'}">
+          <label>USDA Avg Regular Price (per lb)</label>
+          <input type="number" step="0.01" value="${item.regularPrice || ''}" data-index="${index}" class="regular-price" readonly />
         </div>
         
         <div class="form-field">
@@ -322,11 +332,6 @@ if (currentPage === 'home.html') {
             <option ${item.category==='Low-Sodium'?'selected':''}>Low-Sodium</option>
             <option ${item.category==='Other'?'selected':''}>Other</option>
           </select>
-        </div>
-        
-        <div class="form-field ${item.regularPrice ? '' : 'hidden'}">
-          <label>Regular Price (USDA estimate in $)</label>
-          <input type="number" step="0.01" value="${item.regularPrice || ''}" data-index="${index}" class="regular-price" readonly />
         </div>
         
         <div class="form-field ${item.deductible ? '' : 'hidden'}">
@@ -377,12 +382,10 @@ if (currentPage === 'home.html') {
       totalDeduct += deduct > 0 ? deduct : 0;
       if (deduct > 0) hasDeductible = true;
 
-      // Update visible fields
-      const deductField = document.querySelector(`.deductible[data-index="${index}"]`);
-      const deductContainer = deductField?.parentElement;
+      // Update visible deductible field
+      const deductContainer = document.querySelector(`.deductible[data-index="${index}"]`)?.parentElement;
       if (deductContainer) {
         deductContainer.classList.toggle('hidden', !item.deductible);
-        if (deductField) deductField.value = item.deductible;
       }
     });
 
