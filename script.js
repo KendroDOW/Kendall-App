@@ -180,7 +180,6 @@ if (currentPage === 'home.html') {
     previewContainer.style.display = 'block';
     barcodeScannerActive = true;
 
-    // Get location while scanning
     const cityFromGeo = await getCurrentLocation();
 
     Quagga.init({
