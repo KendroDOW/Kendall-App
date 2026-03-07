@@ -54,13 +54,14 @@ function suggestCategory(tags) {
   return 'None';
 }
 
-// Suggest regular counterpart for common specialty items (improved matching)
+// Suggest regular counterpart for common specialty items
 function suggestRegularItem(itemName) {
   const lowerName = itemName.toLowerCase();
-  console.log('[DEBUG] Product name for counterpart:', itemName); // Log exact name
+  console.log('[DEBUG] Product name for counterpart:', itemName);
 
-  if (lowerName.includes('oat') || lowerName.includes('oats') || lowerName.includes('quick oat') || lowerName.includes('rolled oat')) {
-    console.log('[DEBUG] Matched oats');
+  // Very broad oat matching
+  if (lowerName.includes('oat') || lowerName.includes('oats') || lowerName.includes('quick oat') || lowerName.includes('rolled oat') || lowerName.includes('instant oat')) {
+    console.log('[DEBUG] Matched → oats');
     return 'oats';
   }
   if (lowerName.includes('flour')) return 'flour';
@@ -75,6 +76,7 @@ function suggestRegularItem(itemName) {
 
 // Suggest regular price from USDA table
 function suggestRegularPrice(regularItem) {
+  if (!regularItem) return null;
   const lowerItem = regularItem.toLowerCase();
   for (const [key, price] of Object.entries(usdaRegularPrices)) {
     if (lowerItem.includes(key)) {
@@ -82,8 +84,8 @@ function suggestRegularPrice(regularItem) {
       return price;
     }
   }
-  console.log('[DEBUG] No USDA price suggestion');
-  return null; // No suggestion
+  console.log('[DEBUG] No USDA price suggestion for:', regularItem);
+  return null;
 }
 
 // Get approximate location using browser geolocation + reverse geocode
@@ -249,9 +251,6 @@ if (currentPage === 'home.html') {
       const regularItem = suggestRegularItem(product.name);
       const suggestedRegularPrice = suggestRegularPrice(regularItem);
 
-      console.log('[DEBUG] Suggested regular item:', regularItem);
-      console.log('[DEBUG] Suggested USDA price:', suggestedRegularPrice);
-
       currentItems = [{
         name: product.name,
         price: 0,
@@ -330,7 +329,7 @@ if (currentPage === 'home.html') {
           </div>
         </div>
         
-        <div class="form-field ${hasRegularPrice ? '' : 'hidden'}">
+        <div class="form-field">
           <label>USDA Avg Regular Price (per lb)</label>
           <input type="number" step="0.01" value="${item.regularPrice || ''}" data-index="${index}" class="regular-price" readonly />
         </div>
