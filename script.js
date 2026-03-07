@@ -12,6 +12,17 @@ async function initDB() {
 }
 initDB();
 
+// USDA average regular prices (per lb or unit, approximate 2026 values)
+const usdaRegularPrices = {
+  'oats': 0.55,          // regular rolled/quick oats per lb
+  'flour': 0.50,         // all-purpose flour per lb
+  'bread': 1.60,         // white bread per lb
+  'pasta': 1.20,         // regular pasta per lb
+  'sugar': 0.80,         // granulated sugar per lb
+  'soup': 1.50,          // regular canned soup per can
+  // Add more as needed
+};
+
 // Lookup product by barcode using Open Food Facts API
 async function lookupProductByBarcode(barcode) {
   try {
@@ -43,6 +54,27 @@ function suggestCategory(tags) {
   return 'None';
 }
 
+// Suggest regular counterpart for common specialty items
+function suggestRegularItem(itemName) {
+  const lowerName = itemName.toLowerCase();
+  if (lowerName.includes('oats') || lowerName.includes('quick oats')) return 'oats';
+  if (lowerName.includes('flour')) return 'flour';
+  if (lowerName.includes('bread')) return 'bread';
+  if (lowerName.includes('pasta')) return 'pasta';
+  if (lowerName.includes('sweetener') || lowerName.includes('sugar')) return 'sugar';
+  if (lowerName.includes('soup')) return 'soup';
+  return '';
+}
+
+// Suggest regular price from USDA table
+function suggestRegularPrice(regularItem) {
+  const lowerItem = regularItem.toLowerCase();
+  for (const [key, price] of Object.entries(usdaRegularPrices)) {
+    if (lowerItem.includes(key)) return price;
+  }
+  return null; // No suggestion
+}
+
 // Get approximate location using browser geolocation + reverse geocode
 async function getCurrentLocation() {
   if (!navigator.geolocation) {
@@ -61,7 +93,6 @@ async function getCurrentLocation() {
 
     const { latitude, longitude } = position.coords;
 
-    // Reverse geocode using BigDataCloud (free, no key, fast)
     const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
     const data = await response.json();
 
@@ -83,7 +114,6 @@ function suggestStoreName(city, brandHint = '') {
   const lowerCity = city.toLowerCase();
   const lowerBrand = brandHint.toLowerCase();
 
-  // Common chains in Saint George, UT area (expand this list later)
   const utahChains = [
     { name: 'Walmart', keywords: ['walmart', 'supercenter', 'walmart neighborhood market'] },
     { name: "Smith's", keywords: ['smiths', 'smith\'s', 'kroger'] },
@@ -92,16 +122,14 @@ function suggestStoreName(city, brandHint = '') {
     { name: 'Albertsons', keywords: ['albertsons', 'safeway'] },
   ];
 
-  // If brand hint points to a chain
   for (const chain of utahChains) {
     if (lowerBrand.includes(chain.keywords[0])) {
       return chain.name;
     }
   }
 
-  // Fallback from city
   if (lowerCity.includes('saint george') || lowerCity.includes('st george')) {
-    return 'Walmart'; // Most common in area — customize as needed
+    return 'Walmart';
   }
 
   return `${city} Grocery Store`;
@@ -151,7 +179,6 @@ if (currentPage === 'home.html') {
     previewContainer.style.display = 'block';
     barcodeScannerActive = true;
 
-    // Get location while scanning
     const cityFromGeo = await getCurrentLocation();
 
     Quagga.init({
@@ -208,10 +235,14 @@ if (currentPage === 'home.html') {
         alert('Barcode scanned: ' + code + '\nFound: ' + product.name);
       }
 
-      // Pre-fill one item
+      const regularItem = suggestRegularItem(product.name);
+      const suggestedRegularPrice = suggestRegularPrice(regularItem);
+
       currentItems = [{
         name: product.name,
+        regularItem,
         price: 0,
+        regularPrice: suggestedRegularPrice || 0,
         category: suggestCategory(product.categoryTags),
         deductible: ''
       }];
@@ -226,8 +257,8 @@ if (currentPage === 'home.html') {
       document.getElementById('receipt-location').value = currentLocation;
       document.getElementById('receipt-date').value = currentDate;
       renderItems();
+      updateDeductibles();
 
-      // Focus on price field
       document.querySelector('.price')?.focus();
     });
   });
@@ -261,6 +292,7 @@ if (currentPage === 'home.html') {
     document.getElementById('receipt-location').value = currentLocation;
     document.getElementById('receipt-date').value = currentDate;
     renderItems();
+    updateDeductibles();
   });
 
   function renderItems() {
@@ -272,13 +304,13 @@ if (currentPage === 'home.html') {
         <h4>Item ${index + 1}</h4>
         
         <div class="form-field">
-          <label>Item Name</label>
-          <input type="text" value="${item.name}" data-index="${index}" class="name" placeholder="e.g. Gluten-free bread" />
+          <label>Item Name (Specialty)</label>
+          <input type="text" value="${item.name}" data-index="${index}" class="name" placeholder="e.g. Great Value Quick Oats Gluten Free" />
         </div>
         
         <div class="form-field">
-          <label>Price (in $)</label>
-          <input type="number" step="0.01" value="${item.price}" data-index="${index}" class="price" placeholder="e.g. 6.99" />
+          <label>Specialty Price (in $)</label>
+          <input type="number" step="0.01" value="${item.price || ''}" data-index="${index}" class="price" placeholder="e.g. 6.99" />
         </div>
         
         <div class="form-field">
@@ -292,9 +324,14 @@ if (currentPage === 'home.html') {
           </select>
         </div>
         
-        <div class="form-field">
+        <div class="form-field ${item.regularPrice ? '' : 'hidden'}">
+          <label>Regular Price (USDA estimate in $)</label>
+          <input type="number" step="0.01" value="${item.regularPrice || ''}" data-index="${index}" class="regular-price" readonly />
+        </div>
+        
+        <div class="form-field ${item.deductible ? '' : 'hidden'}">
           <label>Deductible (extra amount in $)</label>
-          <input type="number" step="0.01" value="${item.deductible || ''}" data-index="${index}" class="deductible" placeholder="e.g. 2.50 – only the extra cost over regular version" />
+          <input type="number" step="0.01" value="${item.deductible || ''}" data-index="${index}" class="deductible" readonly />
         </div>
         
         <button class="remove-item" data-index="${index}">Remove Item</button>
@@ -302,16 +339,22 @@ if (currentPage === 'home.html') {
       itemsContainer.appendChild(block);
     });
 
-    // Event delegation
+    // Event delegation - live update on input
+    itemsContainer.addEventListener('input', (e) => {
+      const el = e.target;
+      if (!el.matches('.price')) return;
+      const idx = el.dataset.index;
+      currentItems[idx].price = parseFloat(el.value) || 0;
+      updateDeductibles();
+    });
+
     itemsContainer.addEventListener('change', (e) => {
       const el = e.target;
-      if (!el.matches('.name, .price, .category, .deductible')) return;
+      if (!el.matches('.name, .category')) return;
       const idx = el.dataset.index;
       const key = el.className;
       currentItems[idx][key] = el.value;
-      if (key === 'price' || key === 'deductible') {
-        currentItems[idx][key] = parseFloat(el.value) || 0;
-      }
+      updateDeductibles();
     });
 
     itemsContainer.addEventListener('click', (e) => {
@@ -319,12 +362,42 @@ if (currentPage === 'home.html') {
       const idx = e.target.dataset.index;
       currentItems.splice(idx, 1);
       renderItems();
+      updateDeductibles();
     });
   }
 
+  // Update deductible calculation
+  function updateDeductibles() {
+    let totalDeduct = 0;
+    let hasDeductible = false;
+
+    currentItems.forEach((item, index) => {
+      const deduct = (item.price || 0) - (item.regularPrice || 0);
+      item.deductible = deduct > 0 ? deduct.toFixed(2) : '';
+      totalDeduct += deduct > 0 ? deduct : 0;
+      if (deduct > 0) hasDeductible = true;
+
+      // Update visible fields
+      const deductField = document.querySelector(`.deductible[data-index="${index}"]`);
+      const deductContainer = deductField?.parentElement;
+      if (deductContainer) {
+        deductContainer.classList.toggle('hidden', !item.deductible);
+        if (deductField) deductField.value = item.deductible;
+      }
+    });
+
+    const summary = document.getElementById('deductible-summary');
+    if (summary) {
+      summary.style.display = hasDeductible ? 'block' : 'none';
+      const totalSpan = document.getElementById('total-deductible');
+      if (totalSpan) totalSpan.textContent = `$${totalDeduct.toFixed(2)}`;
+    }
+  }
+
   addItemBtn.addEventListener('click', () => {
-    currentItems.push({ name: '', price: 0, category: 'None', deductible: '' });
+    currentItems.push({ name: '', price: 0, regularPrice: 0, category: 'None', deductible: '' });
     renderItems();
+    updateDeductibles();
   });
 
   saveReceiptBtn.addEventListener('click', async () => {
