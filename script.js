@@ -163,14 +163,16 @@ if (currentPage === 'home.html') {
           facingMode: "environment",
           width: { ideal: 1280 },
           height: { ideal: 720 },
+          focusMode: "continuous", // Helps with auto-focus
+          aspectRatio: { ideal: 16 / 9 },
         },
       },
       locator: {
-        patchSize: "medium",
+        patchSize: "large", // Better detection on mobile
         halfSample: true,
       },
-      numOfWorkers: 2,
-      frequency: 10,
+      numOfWorkers: navigator.hardwareConcurrency || 4, // Use all cores if possible
+      frequency: 5, // Lower frequency = less CPU, more stable on mobile
       decoder: {
         readers: ["upc_reader", "ean_reader", "code_128_reader", "ean_8_reader"],
       },
@@ -185,6 +187,10 @@ if (currentPage === 'home.html') {
       }
       Quagga.start();
       console.log('Quagga started');
+    });
+
+    Quagga.onProcessed((result) => {
+      console.log('Frame processed – detection attempt:', result ? 'yes' : 'no');
     });
 
     Quagga.onDetected(async (result) => {
