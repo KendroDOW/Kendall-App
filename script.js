@@ -137,8 +137,12 @@ document.getElementById('logout-btn')?.addEventListener('click', () => {
 
 // Page-specific logic
 const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+const pathLower = window.location.pathname.toLowerCase();
 
-if (currentPage === 'home.html') {
+// More reliable home page detection
+if (pathLower.includes('home') || pathLower.endsWith('/') || pathLower === '' || pathLower.endsWith('/home.html')) {
+  console.log('Detected home page – attaching listeners');
+
   let currentItems = [];
   let currentDate = '';
   let currentLocation = '';
@@ -146,79 +150,107 @@ if (currentPage === 'home.html') {
   // Barcode scanning logic
   let barcodeScannerActive = false;
 
-  document.getElementById('barcode-scan-btn')?.addEventListener('click', async () => {
-    const previewContainer = document.getElementById('barcode-preview-container');
-    previewContainer.style.display = 'block';
-    barcodeScannerActive = true;
+  const scanBtn = document.getElementById('barcode-scan-btn');
+  if (scanBtn) {
+    console.log('Scan button FOUND – attaching click listener');
+    scanBtn.addEventListener('click', async () => {
+      console.log('Scan button CLICKED');
+      const previewContainer = document.getElementById('barcode-preview-container');
+      previewContainer.style.display = 'block';
+      barcodeScannerActive = true;
 
-    // Get location while scanning
-    const cityFromGeo = await getCurrentLocation();
+      const cityFromGeo = await getCurrentLocation();
 
-    Quagga.init({
-      inputStream: {
-        name: "Live",
-        type: "LiveStream",
-        target: document.querySelector('#barcode-video-container'),
-        constraints: {
-          facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          focusMode: "continuous",
-          aspectRatio: { ideal: 16 / 9 },
+      Quagga.init({
+        inputStream: {
+          name: "Live",
+          type: "LiveStream",
+          target: document.querySelector('#barcode-video-container'),
+          constraints: {
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            focusMode: "continuous",
+            aspectRatio: { ideal: 16 / 9 },
+          },
         },
-      },
-      locator: {
-        patchSize: "large",
-        halfSample: true,
-      },
-      numOfWorkers: navigator.hardwareConcurrency || 4,
-      frequency: 5,
-      decoder: {
-        readers: ["upc_reader", "ean_reader", "code_128_reader", "ean_8_reader"],
-      },
-      locate: true,
-    }, function(err) {
-      if (err) {
-        console.error('Quagga init error:', err);
-        alert('Failed to start barcode scanner. Check camera permission.');
-        previewContainer.style.display = 'none';
+        locator: {
+          patchSize: "large",
+          halfSample: true,
+        },
+        numOfWorkers: navigator.hardwareConcurrency || 4,
+        frequency: 5,
+        decoder: {
+          readers: ["upc_reader", "ean_reader", "code_128_reader", "ean_8_reader"],
+        },
+        locate: true,
+      }, function(err) {
+        if (err) {
+          console.error('Quagga init error:', err);
+          alert('Failed to start barcode scanner. Check camera permission.');
+          previewContainer.style.display = 'none';
+          barcodeScannerActive = false;
+          return;
+        }
+        Quagga.start();
+        console.log('Quagga started');
+      });
+
+      Quagga.onProcessed((result) => {
+        console.log('Frame processed – detection attempt:', result ? 'yes' : 'no');
+      });
+
+      Quagga.onDetected(async (result) => {
+        const code = result.codeResult.code;
+        console.log('Barcode detected:', code);
+        Quagga.stop();
+        document.getElementById('barcode-preview-container').style.display = 'none';
         barcodeScannerActive = false;
-        return;
-      }
-      Quagga.start();
-      console.log('Quagga started');
+
+        const product = await lookupProductByBarcode(code);
+
+        if (product.name === 'Product Not Found' || product.name === 'Error Looking Up Product') {
+          alert('Barcode scanned: ' + code + '\nProduct not found in database.\nPlease enter name manually.');
+        } else {
+          alert('Barcode scanned: ' + code + '\nFound: ' + product.name);
+        }
+
+        // Pre-fill one item
+        currentItems = [{
+          name: product.name,
+          price: 0,
+          category: suggestCategory(product.categoryTags),
+          deductible: ''
+        }];
+
+        currentLocation = suggestStoreName(cityFromGeo, product.brand);
+        currentDate = new Date().toISOString().split('T')[0];
+
+        const editSection = document.getElementById('edit-section');
+        editSection.style.display = 'block';
+        document.getElementById('barcode-scan-btn').style.display = 'none';
+        document.getElementById('manual-btn').style.display = 'none';
+        document.getElementById('receipt-location').value = currentLocation;
+        document.getElementById('receipt-date').value = currentDate;
+        renderItems();
+
+        // Focus on price field
+        document.querySelector('.price')?.focus();
+      });
     });
+  } else {
+    console.error('Scan button NOT found in DOM');
+  }
 
-    Quagga.onProcessed((result) => {
-      console.log('Frame processed – detection attempt:', result ? 'yes' : 'no');
-    });
-
-    Quagga.onDetected(async (result) => {
-      const code = result.codeResult.code;
-      console.log('Barcode detected:', code);
-      Quagga.stop();
-      document.getElementById('barcode-preview-container').style.display = 'none';
-      barcodeScannerActive = false;
-
-      const product = await lookupProductByBarcode(code);
-
-      if (product.name === 'Product Not Found' || product.name === 'Error Looking Up Product') {
-        alert('Barcode scanned: ' + code + '\nProduct not found in database.\nPlease enter name manually.');
-      } else {
-        alert('Barcode scanned: ' + code + '\nFound: ' + product.name);
-      }
-
-      // Pre-fill one item
-      currentItems = [{
-        name: product.name,
-        price: 0,
-        category: suggestCategory(product.categoryTags),
-        deductible: ''
-      }];
-
-      currentLocation = suggestStoreName(cityFromGeo, product.brand);
+  const manualBtn = document.getElementById('manual-btn');
+  if (manualBtn) {
+    console.log('Manual button FOUND – attaching click listener');
+    manualBtn.addEventListener('click', async () => {
+      console.log('Manual button CLICKED');
+      currentItems = [];
       currentDate = new Date().toISOString().split('T')[0];
-
+      const cityFromGeo = await getCurrentLocation();
+      currentLocation = suggestStoreName(cityFromGeo);
       const editSection = document.getElementById('edit-section');
       editSection.style.display = 'block';
       document.getElementById('barcode-scan-btn').style.display = 'none';
@@ -226,44 +258,13 @@ if (currentPage === 'home.html') {
       document.getElementById('receipt-location').value = currentLocation;
       document.getElementById('receipt-date').value = currentDate;
       renderItems();
-
-      // Focus on price field
-      document.querySelector('.price')?.focus();
     });
-  });
-
-  document.getElementById('stop-barcode-scan')?.addEventListener('click', () => {
-    if (barcodeScannerActive) {
-      Quagga.stop();
-      document.getElementById('barcode-preview-container').style.display = 'none';
-      barcodeScannerActive = false;
-      document.getElementById('barcode-scan-btn').style.display = 'block';
-      document.getElementById('manual-btn').style.display = 'block';
-    }
-  });
-
-  // Manual entry logic
-  const manualBtn = document.getElementById('manual-btn');
-  const editSection = document.getElementById('edit-section');
-  const itemsContainer = document.getElementById('items-container');
-  const addItemBtn = document.getElementById('add-item-btn');
-  const saveReceiptBtn = document.getElementById('save-receipt');
-  const cancelEditBtn = document.getElementById('cancel-edit');
-
-  manualBtn.addEventListener('click', async () => {
-    currentItems = [];
-    currentDate = new Date().toISOString().split('T')[0];
-    const cityFromGeo = await getCurrentLocation();
-    currentLocation = suggestStoreName(cityFromGeo);
-    editSection.style.display = 'block';
-    document.getElementById('barcode-scan-btn').style.display = 'none';
-    document.getElementById('manual-btn').style.display = 'none';
-    document.getElementById('receipt-location').value = currentLocation;
-    document.getElementById('receipt-date').value = currentDate;
-    renderItems();
-  });
+  } else {
+    console.error('Manual button NOT found in DOM');
+  }
 
   function renderItems() {
+    const itemsContainer = document.getElementById('items-container');
     itemsContainer.innerHTML = '';
     currentItems.forEach((item, index) => {
       const block = document.createElement('div');
@@ -331,4 +332,148 @@ if (currentPage === 'home.html') {
     currentDate = document.getElementById('receipt-date').value;
     currentLocation = document.getElementById('receipt-location').value;
 
-    if (currentItems.length === 
+    if (currentItems.length === 0) return alert('No items to save.');
+
+    const receipt = {
+      date: currentDate || new Date().toISOString().split('T')[0],
+      location: currentLocation || 'Unknown Location',
+      items: [...currentItems],
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      await db.put(STORE_NAME, receipt);
+      alert('Receipt saved!');
+      editSection.style.display = 'none';
+      itemsContainer.innerHTML = '';
+      document.getElementById('barcode-scan-btn').style.display = 'block';
+      document.getElementById('manual-btn').style.display = 'block';
+    } catch (err) {
+      console.error('Save error:', err);
+      alert('Error saving receipt. Check console.');
+    }
+  });
+
+  cancelEditBtn.addEventListener('click', () => {
+    editSection.style.display = 'none';
+    itemsContainer.innerHTML = '';
+    document.getElementById('barcode-scan-btn').style.display = 'block';
+    document.getElementById('manual-btn').style.display = 'block';
+  });
+}
+
+// History page logic
+if (currentPage === 'history.html' || window.location.pathname.includes('history')) {
+  async function loadLogs() {
+    const logList = document.getElementById('log-list');
+    if (!logList) return;
+    logList.innerHTML = '<p>Loading history...</p>';
+
+    try {
+      if (!db) {
+        console.log('DB not ready – waiting...');
+        await initDB();
+      }
+
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const all = await store.getAll();
+      await tx.done;
+
+      console.log('History loaded – receipts:', all.length, all);
+
+      logList.innerHTML = all.length ? '' : '<p>No receipts logged yet.</p>';
+
+      all.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'history-card';
+        card.style.cursor = 'pointer';
+        card.style.padding = '16px';
+        card.style.background = 'white';
+        card.style.borderRadius = '8px';
+        card.style.marginBottom = '12px';
+        card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+        card.innerHTML = `
+          <strong>${r.location || 'Unknown Location'} ${r.date}</strong><br>
+          <small>${r.items.length} item(s) • Saved ${new Date(r.createdAt).toLocaleDateString()}</small>
+        `;
+        card.addEventListener('click', () => showReport(r));
+        logList.appendChild(card);
+      });
+    } catch (err) {
+      console.error('loadLogs error:', err);
+      logList.innerHTML = '<p>Error loading history. Check console.</p>';
+    }
+  }
+
+  function showReport(receipt) {
+    const modal = document.getElementById('report-modal');
+    if (!modal) return;
+    const title = document.getElementById('report-title');
+    const itemsDiv = document.getElementById('report-items');
+    const totalDiv = document.getElementById('report-total');
+
+    title.textContent = `${receipt.location || 'Unknown Location'} - ${receipt.date}`;
+    itemsDiv.innerHTML = '';
+
+    let totalDeduct = 0;
+    receipt.items.forEach(i => {
+      const deduct = parseFloat(i.deductible) || 0;
+      totalDeduct += deduct;
+
+      const itemLine = document.createElement('div');
+      itemLine.className = 'report-item';
+      itemLine.innerHTML = `
+        <span>${i.name || 'Unnamed'} (${i.category || 'None'})</span>
+        <span>$${parseFloat(i.price || 0).toFixed(2)}</span>
+      `;
+      itemsDiv.appendChild(itemLine);
+
+      if (deduct > 0) {
+        const deductLine = document.createElement('div');
+        deductLine.className = 'report-item';
+        deductLine.style.color = 'var(--accent)';
+        deductLine.innerHTML = `
+          <span>Deductible extra</span>
+          <span>$${deduct.toFixed(2)}</span>
+        `;
+        itemsDiv.appendChild(deductLine);
+      }
+    });
+
+    totalDiv.innerHTML = `Total potential deduction: $${totalDeduct.toFixed(2)}`;
+
+    modal.style.display = 'flex';
+  }
+
+  document.getElementById('close-report')?.addEventListener('click', () => {
+    document.getElementById('report-modal').style.display = 'none';
+  });
+
+  // Load on page load
+  loadLogs();
+
+  // Export CSV
+  document.getElementById('export-csv')?.addEventListener('click', async () => {
+    if (!db) await initDB();
+    const tx = db.transaction(STORE_NAME);
+    const store = tx.objectStore(STORE_NAME);
+    const all = await store.getAll();
+    if (!all.length) return alert('No data to export.');
+
+    let csv = 'Date,Location,Item,Price,Category,Deductible\n';
+    all.forEach(r => {
+      r.items.forEach(i => {
+        csv += `"${r.date}","${r.location}","${i.name.replace(/"/g,'""')}","${i.price}","${i.category}","${i.deductible || ''}"\n`;
+      });
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'deducteats_export.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
