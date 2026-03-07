@@ -43,70 +43,6 @@ function suggestCategory(tags) {
   return 'None';
 }
 
-// Get approximate location using browser geolocation + reverse geocode
-async function getCurrentLocation() {
-  if (!navigator.geolocation) {
-    console.warn('Geolocation not supported');
-    return 'Unknown Location';
-  }
-
-  try {
-    const position = await new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      });
-    });
-
-    const { latitude, longitude } = position.coords;
-
-    // Reverse geocode using BigDataCloud (free, no key, fast)
-    const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-    const data = await response.json();
-
-    if (data.city && data.locality) {
-      return `${data.city}, ${data.principalSubdivision || data.countryName}`;
-    } else if (data.city) {
-      return data.city;
-    } else {
-      return 'Unknown Location';
-    }
-  } catch (err) {
-    console.warn('Geolocation error:', err);
-    return 'Unknown Location';
-  }
-}
-
-// Suggest store name based on city + brand hint
-function suggestStoreName(city, brandHint = '') {
-  const lowerCity = city.toLowerCase();
-  const lowerBrand = brandHint.toLowerCase();
-
-  // Common chains in Saint George, UT area (expand this list later)
-  const utahChains = [
-    { name: 'Walmart', keywords: ['walmart', 'supercenter', 'walmart neighborhood market'] },
-    { name: "Smith's", keywords: ['smiths', 'smith\'s', 'kroger'] },
-    { name: 'Maceys', keywords: ['maceys', 'macey\'s'] },
-    { name: 'Harmons', keywords: ['harmons'] },
-    { name: 'Albertsons', keywords: ['albertsons', 'safeway'] },
-  ];
-
-  // If brand hint points to a chain
-  for (const chain of utahChains) {
-    if (lowerBrand.includes(chain.keywords[0])) {
-      return chain.name;
-    }
-  }
-
-  // Fallback from city
-  if (lowerCity.includes('saint george') || lowerCity.includes('st george')) {
-    return 'Walmart'; // Most common in area — customize as needed
-  }
-
-  return `${city} Grocery Store`;
-}
-
 // Login from welcome page (runs on index.html)
 document.getElementById('start-login-btn')?.addEventListener('click', () => {
   console.log('Login button clicked – setting flag and redirecting');
@@ -146,13 +82,10 @@ if (currentPage === 'home.html') {
   // Barcode scanning logic
   let barcodeScannerActive = false;
 
-  document.getElementById('barcode-scan-btn')?.addEventListener('click', async () => {
+  document.getElementById('barcode-scan-btn')?.addEventListener('click', () => {
     const previewContainer = document.getElementById('barcode-preview-container');
     previewContainer.style.display = 'block';
     barcodeScannerActive = true;
-
-    // Get location while scanning
-    const cityFromGeo = await getCurrentLocation();
 
     Quagga.init({
       inputStream: {
@@ -210,7 +143,7 @@ if (currentPage === 'home.html') {
         deductible: ''
       }];
 
-      currentLocation = suggestStoreName(cityFromGeo, product.brand);
+      currentLocation = product.brand ? product.brand + ' Store' : 'Unknown Store';
       currentDate = new Date().toISOString().split('T')[0];
 
       const editSection = document.getElementById('edit-section');
@@ -244,11 +177,10 @@ if (currentPage === 'home.html') {
   const saveReceiptBtn = document.getElementById('save-receipt');
   const cancelEditBtn = document.getElementById('cancel-edit');
 
-  manualBtn.addEventListener('click', async () => {
+  manualBtn.addEventListener('click', () => {
     currentItems = [];
     currentDate = new Date().toISOString().split('T')[0];
-    const cityFromGeo = await getCurrentLocation();
-    currentLocation = suggestStoreName(cityFromGeo);
+    currentLocation = '';
     editSection.style.display = 'block';
     document.getElementById('barcode-scan-btn').style.display = 'none';
     document.getElementById('manual-btn').style.display = 'none';
