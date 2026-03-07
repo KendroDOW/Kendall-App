@@ -133,7 +133,7 @@ document.getElementById('logout-btn')?.addEventListener('click', () => {
     localStorage.removeItem('deductEatsLoggedIn');
     window.location.href = 'index.html';
   }
-}
+});
 
 // Page-specific logic
 const currentPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -213,8 +213,7 @@ if (currentPage === 'home.html') {
         name: product.name,
         price: 0,
         category: suggestCategory(product.categoryTags),
-        deductible: '',
-        regularPrice: 0
+        deductible: ''
       }];
 
       currentLocation = suggestStoreName(cityFromGeo, product.brand);
@@ -273,23 +272,13 @@ if (currentPage === 'home.html') {
         <h4>Item ${index + 1}</h4>
         
         <div class="form-field">
-          <label>Item Name (Specialty)</label>
-          <input type="text" value="${item.name}" data-index="${index}" class="name" placeholder="e.g. Great Value Quick Oats Gluten Free" />
+          <label>Item Name</label>
+          <input type="text" value="${item.name}" data-index="${index}" class="name" placeholder="e.g. Gluten-free bread" />
         </div>
         
         <div class="form-field">
-          <label>Regular Item (for comparison)</label>
-          <input type="text" value="${item.regularItem || ''}" data-index="${index}" class="regular-item" placeholder="e.g. Quick oats" />
-        </div>
-        
-        <div class="form-field">
-          <label>Specialty Price (in $)</label>
-          <input type="number" step="0.01" value="${item.price || ''}" data-index="${index}" class="price" placeholder="e.g. 6.99" />
-        </div>
-        
-        <div class="form-field">
-          <label>Regular Price (in $)</label>
-          <input type="number" step="0.01" value="${item.regularPrice || ''}" data-index="${index}" class="regular-price" placeholder="e.g. 3.50" />
+          <label>Price (in $)</label>
+          <input type="number" step="0.01" value="${item.price}" data-index="${index}" class="price" placeholder="e.g. 6.99" />
         </div>
         
         <div class="form-field">
@@ -305,7 +294,7 @@ if (currentPage === 'home.html') {
         
         <div class="form-field">
           <label>Deductible (extra amount in $)</label>
-          <input type="number" step="0.01" value="${item.deductible || ''}" data-index="${index}" class="deductible" placeholder="Auto-calculated" readonly />
+          <input type="number" step="0.01" value="${item.deductible || ''}" data-index="${index}" class="deductible" placeholder="e.g. 2.50 – only the extra cost over regular version" />
         </div>
         
         <button class="remove-item" data-index="${index}">Remove Item</button>
@@ -313,16 +302,15 @@ if (currentPage === 'home.html') {
       itemsContainer.appendChild(block);
     });
 
-    // Event delegation - update deductible on change
+    // Event delegation
     itemsContainer.addEventListener('change', (e) => {
       const el = e.target;
-      if (!el.matches('.name, .price, .regular-price, .category, .deductible')) return;
+      if (!el.matches('.name, .price, .category, .deductible')) return;
       const idx = el.dataset.index;
       const key = el.className;
       currentItems[idx][key] = el.value;
-      if (key === 'price' || key === 'regularPrice') {
+      if (key === 'price' || key === 'deductible') {
         currentItems[idx][key] = parseFloat(el.value) || 0;
-        updateDeductibles();
       }
     });
 
@@ -331,30 +319,12 @@ if (currentPage === 'home.html') {
       const idx = e.target.dataset.index;
       currentItems.splice(idx, 1);
       renderItems();
-      updateDeductibles();
     });
-  }
-
-  // Function to update deductible fields and total
-  function updateDeductibles() {
-    let totalDeduct = 0;
-    currentItems.forEach((item, index) => {
-      const deduct = (item.price || 0) - (item.regularPrice || 0);
-      item.deductible = deduct > 0 ? deduct.toFixed(2) : '';
-      totalDeduct += deduct > 0 ? deduct : 0;
-      // Update readonly deductible field
-      const deductInput = document.querySelector(`.deductible[data-index="${index}"]`);
-      if (deductInput) deductInput.value = item.deductible;
-    });
-
-    const totalSpan = document.getElementById('total-deductible');
-    if (totalSpan) totalSpan.textContent = `$${totalDeduct.toFixed(2)}`;
   }
 
   addItemBtn.addEventListener('click', () => {
-    currentItems.push({ name: '', price: 0, regularPrice: 0, category: 'None', deductible: '' });
+    currentItems.push({ name: '', price: 0, category: 'None', deductible: '' });
     renderItems();
-    updateDeductibles();
   });
 
   saveReceiptBtn.addEventListener('click', async () => {
