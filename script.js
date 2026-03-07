@@ -12,17 +12,6 @@ async function initDB() {
 }
 initDB();
 
-// Static USDA average regular prices (per lb or unit, approximate 2026 values)
-const usdaRegularPrices = {
-  'oats': 0.55,          // regular rolled/quick oats per lb
-  'flour': 0.50,         // all-purpose flour per lb
-  'bread': 1.60,         // white bread per lb
-  'pasta': 1.20,         // regular pasta per lb
-  'sugar': 0.80,         // granulated sugar per lb
-  'soup': 1.50,          // regular canned soup per can
-  // Add more as needed
-};
-
 // Lookup product by barcode using Open Food Facts API
 async function lookupProductByBarcode(barcode) {
   try {
@@ -52,28 +41,6 @@ function suggestCategory(tags) {
   if (tagString.includes('keto') || tagString.includes('low-carb')) return 'Keto';
   if (tagString.includes('low-sodium') || tagString.includes('reduced sodium')) return 'Low-Sodium';
   return 'None';
-}
-
-// Suggest regular counterpart for common specialty items
-function suggestRegularItem(itemName) {
-  const lowerName = itemName.toLowerCase();
-  if (lowerName.includes('gluten-free') && lowerName.includes('oats')) return 'oats';
-  if (lowerName.includes('gluten-free') && lowerName.includes('flour')) return 'flour';
-  if (lowerName.includes('gluten-free') && lowerName.includes('bread')) return 'bread';
-  if (lowerName.includes('gluten-free') && lowerName.includes('pasta')) return 'pasta';
-  if (lowerName.includes('keto') && lowerName.includes('sweetener')) return 'sugar';
-  if (lowerName.includes('sugar-free') && lowerName.includes('sweetener')) return 'sugar';
-  if (lowerName.includes('low-sodium') && lowerName.includes('soup')) return 'soup';
-  return '';
-}
-
-// Suggest regular price from USDA table (per lb or unit)
-function suggestRegularPrice(regularItem) {
-  const lowerItem = regularItem.toLowerCase();
-  for (const [key, price] of Object.entries(usdaRegularPrices)) {
-    if (lowerItem.includes(key)) return price;
-  }
-  return 0; // No suggestion
 }
 
 // Get approximate location using browser geolocation + reverse geocode
@@ -242,13 +209,8 @@ if (currentPage === 'home.html') {
       }
 
       // Pre-fill one item
-      const regularItem = suggestRegularItem(product.name);
-      const suggestedRegularPrice = suggestRegularPrice(regularItem);
-
       currentItems = [{
         name: product.name,
-        regularItem: regularItem,
-        regularPrice: suggestedRegularPrice,
         price: 0,
         category: suggestCategory(product.categoryTags),
         deductible: ''
@@ -264,9 +226,8 @@ if (currentPage === 'home.html') {
       document.getElementById('receipt-location').value = currentLocation;
       document.getElementById('receipt-date').value = currentDate;
       renderItems();
-      updateDeductibles();
 
-      // Focus on specialty price field
+      // Focus on price field
       document.querySelector('.price')?.focus();
     });
   });
@@ -300,7 +261,6 @@ if (currentPage === 'home.html') {
     document.getElementById('receipt-location').value = currentLocation;
     document.getElementById('receipt-date').value = currentDate;
     renderItems();
-    updateDeductibles();
   });
 
   function renderItems() {
@@ -312,23 +272,13 @@ if (currentPage === 'home.html') {
         <h4>Item ${index + 1}</h4>
         
         <div class="form-field">
-          <label>Item Name (Specialty)</label>
-          <input type="text" value="${item.name}" data-index="${index}" class="name" placeholder="e.g. Great Value Quick Oats Gluten Free" />
+          <label>Item Name</label>
+          <input type="text" value="${item.name}" data-index="${index}" class="name" placeholder="e.g. Gluten-free bread" />
         </div>
         
         <div class="form-field">
-          <label>Regular Item (for comparison)</label>
-          <input type="text" value="${item.regularItem || ''}" data-index="${index}" class="regular-item" placeholder="e.g. Quick oats" />
-        </div>
-        
-        <div class="form-field">
-          <label>Specialty Price (in $)</label>
-          <input type="number" step="0.01" value="${item.price || ''}" data-index="${index}" class="price" placeholder="e.g. 6.99" />
-        </div>
-        
-        <div class="form-field">
-          <label>Regular Price (in $)</label>
-          <input type="number" step="0.01" value="${item.regularPrice || ''}" data-index="${index}" class="regular-price" placeholder="e.g. 3.50" />
+          <label>Price (in $)</label>
+          <input type="number" step="0.01" value="${item.price}" data-index="${index}" class="price" placeholder="e.g. 6.99" />
         </div>
         
         <div class="form-field">
@@ -344,7 +294,7 @@ if (currentPage === 'home.html') {
         
         <div class="form-field">
           <label>Deductible (extra amount in $)</label>
-          <input type="number" step="0.01" value="${item.deductible || ''}" data-index="${index}" class="deductible" placeholder="Auto-calculated" readonly />
+          <input type="number" step="0.01" value="${item.deductible || ''}" data-index="${index}" class="deductible" placeholder="e.g. 2.50 – only the extra cost over regular version" />
         </div>
         
         <button class="remove-item" data-index="${index}">Remove Item</button>
@@ -352,23 +302,16 @@ if (currentPage === 'home.html') {
       itemsContainer.appendChild(block);
     });
 
-    // Event delegation - update deductible on input/change
-    itemsContainer.addEventListener('input', (e) => {
-      const el = e.target;
-      if (!el.matches('.price, .regular-price')) return;
-      const idx = el.dataset.index;
-      const key = el.className;
-      currentItems[idx][key] = parseFloat(el.value) || 0;
-      updateDeductibles();
-    });
-
+    // Event delegation
     itemsContainer.addEventListener('change', (e) => {
       const el = e.target;
-      if (!el.matches('.name, .category, .deductible')) return;
+      if (!el.matches('.name, .price, .category, .deductible')) return;
       const idx = el.dataset.index;
       const key = el.className;
       currentItems[idx][key] = el.value;
-      updateDeductibles();
+      if (key === 'price' || key === 'deductible') {
+        currentItems[idx][key] = parseFloat(el.value) || 0;
+      }
     });
 
     itemsContainer.addEventListener('click', (e) => {
@@ -376,30 +319,12 @@ if (currentPage === 'home.html') {
       const idx = e.target.dataset.index;
       currentItems.splice(idx, 1);
       renderItems();
-      updateDeductibles();
     });
-  }
-
-  // Function to update deductible fields and total
-  function updateDeductibles() {
-    let totalDeduct = 0;
-    currentItems.forEach((item, index) => {
-      const deduct = (item.price || 0) - (item.regularPrice || 0);
-      item.deductible = deduct > 0 ? deduct.toFixed(2) : '';
-      totalDeduct += deduct > 0 ? deduct : 0;
-      // Update readonly deductible field
-      const deductInput = document.querySelector(`.deductible[data-index="${index}"]`);
-      if (deductInput) deductInput.value = item.deductible;
-    });
-
-    const totalSpan = document.getElementById('total-deductible');
-    if (totalSpan) totalSpan.textContent = `$${totalDeduct.toFixed(2)}`;
   }
 
   addItemBtn.addEventListener('click', () => {
-    currentItems.push({ name: '', price: 0, regularPrice: 0, category: 'None', deductible: '' });
+    currentItems.push({ name: '', price: 0, category: 'None', deductible: '' });
     renderItems();
-    updateDeductibles();
   });
 
   saveReceiptBtn.addEventListener('click', async () => {
