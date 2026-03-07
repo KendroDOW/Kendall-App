@@ -23,7 +23,7 @@ const usdaRegularPrices = {
   // Add more as needed
 };
 
-// Lookup product by barcode using Open Food Facts API – now extracts quantity
+// Lookup product by barcode using Open Food Facts API – extracts quantity
 async function lookupProductByBarcode(barcode) {
   try {
     const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
@@ -40,7 +40,7 @@ async function lookupProductByBarcode(barcode) {
         name: product.product_name || product.generic_name || 'Unknown Product',
         brand: product.brands || '',
         categoryTags: product.categories_tags || product.categories || [],
-        quantity: quantity, // e.g. "510 g (18 oz)"
+        quantity: quantity,
       };
     } else {
       return { name: 'Product Not Found', brand: '', categoryTags: [], quantity: '' };
@@ -336,6 +336,7 @@ if (currentPage === 'home.html') {
     currentItems.forEach((item, index) => {
       const hasRegularPrice = item.regularPrice > 0;
       const hasQuantity = !!item.quantity;
+      const hasDeductible = item.deductible !== '' && parseFloat(item.deductible) > 0;
       const block = document.createElement('div');
       block.className = 'item-block';
       block.innerHTML = `
@@ -375,8 +376,8 @@ if (currentPage === 'home.html') {
           </select>
         </div>
         
-        <div class="form-field ${item.deductible ? '' : 'hidden'}">
-          <label>Deductible (extra amount in $)</label>
+        <div class="form-field ${hasDeductible ? '' : 'hidden'}">
+          <label>Estimated Deductible (based on USDA averages)</label>
           <input type="number" step="0.01" value="${item.deductible || ''}" data-index="${index}" class="deductible" readonly />
         </div>
         
