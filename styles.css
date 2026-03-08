@@ -13,24 +13,26 @@ body {
   min-height: 100vh;
 }
 
-/* Center everything with a max width */
-header, main, footer, .hero {
+/* Center content with responsive max-width */
+header, nav, main, footer, .hero {
   max-width: 900px;
   margin: 0 auto;
   padding: 0 20px;
 }
 
-/* Navigation */
+/* Navigation - full color and layout */
 #top-nav {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 24px;
   padding: 16px 0;
-  background: white;
+  background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
   z-index: 10;
+  flex-wrap: wrap;
 }
 
 .nav-btn {
@@ -47,6 +49,21 @@ header, main, footer, .hero {
   color: #1d4ed8;
 }
 
+#logout-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#logout-btn:hover {
+  background: #dc2626;
+}
+
 /* Header */
 header {
   padding: 24px 0;
@@ -59,9 +76,6 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 20px;
 }
 
 h1 {
@@ -75,10 +89,11 @@ h1 {
   text-align: center;
   padding: 80px 20px 60px;
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  min-height: 60vh;
+  min-height: 50vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
 }
 
 .tagline {
@@ -87,13 +102,15 @@ h1 {
   color: #1e293b;
   margin-bottom: 40px;
   line-height: 1.2;
+  width: 100%;
+  max-width: 800px;
 }
 
 .cycle-container {
   display: inline-block;
   position: relative;
-  min-width: 300px; /* Wide enough for "gluten-free" and "low-sodium" */
-  height: 3rem;
+  min-width: 320px;
+  height: 3.5rem;
   vertical-align: middle;
 }
 
@@ -106,7 +123,7 @@ h1 {
   font-weight: 800;
   font-size: 2.8rem;
   line-height: 1.1;
-  padding: 0 12px;
+  padding: 0 16px;
   white-space: nowrap;
   opacity: 0;
   transform: translateY(20px);
@@ -114,7 +131,6 @@ h1 {
   text-align: center;
 }
 
-/* Distinct colors and subtle glow */
 .cycle-text.gluten-free { color: #10b981; text-shadow: 0 0 12px rgba(16,185,129,0.4); }
 .cycle-text.low-sodium   { color: #3b82f6; text-shadow: 0 0 12px rgba(59,130,246,0.4); }
 .cycle-text.keto         { color: #ec4899; text-shadow: 0 0 12px rgba(236,72,153,0.4); }
@@ -131,6 +147,8 @@ h1 {
   justify-content: center;
   gap: 20px;
   flex-wrap: wrap;
+  width: 100%;
+  max-width: 500px;
 }
 
 .primary, .secondary {
@@ -140,6 +158,8 @@ h1 {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  flex: 1;
+  min-width: 200px;
 }
 
 .primary {
@@ -148,10 +168,7 @@ h1 {
   border: none;
 }
 
-.primary:hover {
-  background: #1d4ed8;
-  transform: translateY(-2px);
-}
+.primary:hover { background: #1d4ed8; transform: translateY(-2px); }
 
 .secondary {
   background: white;
@@ -159,10 +176,7 @@ h1 {
   border: 2px solid #e2e8f0;
 }
 
-.secondary:hover {
-  background: #f1f5f9;
-  transform: translateY(-2px);
-}
+.secondary:hover { background: #f1f5f9; transform: translateY(-2px); }
 
 /* Form & Items */
 #edit-section {
@@ -238,6 +252,7 @@ h2 {
 .edit-actions {
   display: flex;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .edit-actions button {
@@ -247,21 +262,9 @@ h2 {
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
+  min-width: 140px;
 }
 
-.primary {
-  background: #2563eb;
-  color: white;
-  border: none;
-}
-
-.secondary {
-  background: white;
-  color: #1f2937;
-  border: 2px solid #e2e8f0;
-}
-
-/* Deductible summary */
 #deductible-summary {
   background: #e0f2fe;
   border-radius: 12px;
@@ -295,8 +298,12 @@ h2 {
   text-decoration: none;
 }
 
-/* Responsive */
+/* Responsive adjustments for phone */
 @media (max-width: 768px) {
+  header, main, footer, .hero {
+    padding: 0 16px;
+  }
+
   .hero {
     padding: 60px 16px 40px;
   }
@@ -316,5 +323,28 @@ h2 {
   .hero-buttons {
     flex-direction: column;
     gap: 16px;
+  }
+
+  #top-nav {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 0;
+  }
+
+  .edit-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .item-block {
+    padding: 16px;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  h2 {
+    font-size: 1.6rem;
   }
 }
