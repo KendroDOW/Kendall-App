@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DeductEats - Welcome</title>
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Google Fonts (Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- idb library (if needed later) -->
+  <script src="https://unpkg.com/idb@7.1.1/build/umd.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      color: #1f2937;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 24px 0;
+      text-align: center;
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .tagline {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 32px;
+      line-height: 1.2;
+      max-width: 800px;
+    }
+
+    .cycle-container {
+      display: inline-block;
+      position: relative;
+      min-width: 320px;
+      height: 3.5rem;
+      vertical-align: middle;
+    }
+
+    .cycle-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 2.8rem;
+      line-height: 1.1;
+      padding: 0 16px;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.8s ease-in-out;
+      text-align: center;
+    }
+
+    .cycle-text.gluten-free { color: #10b981; }
+    .cycle-text.low-sodium   { color: #3b82f6; }
+    .cycle-text.keto         { color: #ec4899; }
+    .cycle-text.prescribed   { color: #8b5cf6; }
+
+    .cycle-text.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .get-started-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 20px 48px;
+      border-radius: 12px;
+      font-size: 1.4rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+    }
+
+    .get-started-btn:hover {
+      background: #1d4ed8;
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(37,99,235,0.4);
+    }
+
+    footer {
+      text-align: center;
+      padding: 32px 20px;
+      color: #64748b;
+      border-top: 1px solid #e2e8f0;
+      margin-top: auto;
+    }
+
+    .social-icons {
+      margin-bottom: 16px;
+    }
+
+    .social-link {
+      font-size: 2rem;
+      margin: 0 16px;
+      color: #475569;
+      text-decoration: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .tagline {
+        font-size: 2rem;
+      }
+
+      .cycle-container {
+        min-width: 180px;
+      }
+
+      .cycle-text {
+        font-size: 2rem;
+      }
+
+      .get-started-btn {
+        padding: 16px 40px;
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>DeductEats</h1>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div class="tagline">
+        Money back for your 
+        <span class="cycle-container">
+          <span id="cycle-text" class="cycle-text gluten-free">gluten-free</span>
+        </span> 
+        diet
+      </div>
+
+      <button id="start-login-btn" class="get-started-btn">
+        Get Started / Log In
+      </button>
+
+      <p style="margin-top: 32px; font-size: 1rem; color: #64748b;">
+        Track the extra cost of medically necessary foods and estimate potential tax deductions.
+      </p>
+    </div>
+  </main>
+
+  <footer>
+    <div class="social-icons">
+      <a href="#" title="Follow on X" class="social-link">𝕏</a>
+      <a href="#" title="Follow on Instagram" class="social-link">📸</a>
+      <a href="#" title="Follow on Facebook" class="social-link">f</a>
+    </div>
+    <small>© 2026 DeductEats • Saint George, Utah</small>
+  </footer>
+
+  <!-- Cycling tagline script -->
+  <script>
+    const dietTypes = [
+      { text: 'gluten-free', class: 'gluten-free' },
+      { text: 'low-sodium',  class: 'low-sodium' },
+      { text: 'keto',        class: 'keto' },
+      { text: 'prescribed',  class: 'prescribed' }
+    ];
+
+    const cycleText = document.getElementById('cycle-text');
+    let currentIndex = 0;
+
+    if (cycleText) {
+      cycleText.textContent = dietTypes[0].text;
+      cycleText.className = 'cycle-text active ' + dietTypes[0].class;
+
+      setInterval(() => {
+        cycleText.classList.remove('active');
+        
+        setTimeout(() => {
+          currentIndex = (currentIndex + 1) % dietTypes.length;
+          const next = dietTypes[currentIndex];
+          
+          cycleText.textContent = next.text;
+          cycleText.className = 'cycle-text ' + next.class;
+          
+          setTimeout(() => {
+            cycleText.classList.add('active');
+          }, 100);
+        }, 800);
+      }, 5000);
+    }
+
+    // "Get Started / Log In" button
+    document.getElementById('start-login-btn')?.addEventListener('click', () => {
+      localStorage.setItem('deductEatsLoggedIn', 'true');
+      window.location.href = 'home.html';  // Change to 'index.html' if that's your main app page
+    });
+  </script>
+</body>
+</html>
