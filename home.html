@@ -6,6 +6,11 @@
   <title>DeductEats - Home</title>
   <link rel="stylesheet" href="styles.css">
   
+  <!-- Google Fonts (Inter) for modern, professional typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <!-- idb library - for IndexedDB -->
   <script src="https://unpkg.com/idb@7.1.1/build/umd.js"></script>
   
@@ -13,35 +18,73 @@
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
 
   <style>
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f8fafc;
+      color: #1f2937;
+      margin: 0;
+      padding: 0;
+    }
+
     .hero {
       text-align: center;
-      padding: 60px 20px 40px;
-      background: #f8fafc;
+      padding: 80px 20px 60px;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      min-height: 60vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .tagline {
-      font-size: 2rem;
-      font-weight: 600;
-      color: #1f2937;
-      margin-bottom: 32px;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 40px;
+      line-height: 1.2;
+    }
+
+    .cycle-container {
+      display: inline-block;
+      position: relative;
+      min-width: 220px; /* Wide enough for longest phrase "gluten-free" */
+      height: 2.5rem;
+      vertical-align: middle;
+      overflow: hidden;
     }
 
     .cycle-text {
-      display: inline-block;
-      min-width: 150px; /* Prevent layout shift */
-      color: #2563eb; /* Accent color */
-      animation: fadeIn 0.8s ease-in-out;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 2.5rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.8s ease-in-out;
+      text-align: center;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .cycle-text.gluten-free { color: #10b981; text-shadow: 0 0 10px rgba(16,185,129,0.3); }
+    .cycle-text.low-sodium   { color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.3); }
+    .cycle-text.keto         { color: #ec4899; text-shadow: 0 0 10px rgba(236,72,153,0.3); }
+    .cycle-text.prescribed   { color: #8b5cf6; text-shadow: 0 0 10px rgba(139,92,246,0.3); }
+
+    .cycle-text.active {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .hero-buttons {
       display: flex;
       justify-content: center;
       gap: 16px;
+      margin-top: 32px;
     }
 
     .primary {
@@ -56,9 +99,7 @@
       transition: background 0.2s;
     }
 
-    .primary:hover {
-      background: #1d4ed8;
-    }
+    .primary:hover { background: #1d4ed8; }
 
     .secondary {
       background: #f1f5f9;
@@ -72,13 +113,75 @@
       transition: background 0.2s;
     }
 
-    .secondary:hover {
-      background: #e2e8f0;
+    .secondary:hover { background: #e2e8f0; }
+
+    .hidden { display: none !important; }
+
+    .item-block {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
-    /* Hide class for dynamic fields */
-    .hidden {
-      display: none !important;
+    .form-field {
+      margin-bottom: 20px;
+    }
+
+    .form-field label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #374151;
+    }
+
+    .form-field input, .form-field select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: white;
+      font-size: 1rem;
+    }
+
+    .add-btn {
+      background: #f3f4f6;
+      color: #1f2937;
+      border: 1px solid #d1d5db;
+      padding: 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 24px;
+      width: 100%;
+    }
+
+    .edit-actions {
+      display: flex;
+      gap: 16px;
+    }
+
+    .edit-actions button {
+      flex: 1;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #deductible-summary {
+      background: #e0f2fe;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: right;
+      margin-top: 32px;
+    }
+
+    #deductible-summary strong {
+      font-size: 1.25rem;
+      color: #1e40af;
     }
   </style>
 </head>
@@ -102,7 +205,11 @@
     <!-- Hero section with cycling tagline -->
     <div class="hero">
       <div class="tagline">
-        Money back for your <span id="cycle-text" class="cycle-text">gluten-free</span> diet
+        Money back for your 
+        <span class="cycle-container">
+          <span id="cycle-text" class="cycle-text gluten-free">gluten-free</span>
+        </span> 
+        diet
       </div>
 
       <div class="hero-buttons">
@@ -171,19 +278,36 @@
 
   <!-- Cycling tagline script -->
   <script>
-    const dietTypes = ['gluten-free', 'low-sodium', 'keto', 'prescribed'];
+    const dietTypes = [
+      { text: 'gluten-free', class: 'gluten-free' },
+      { text: 'low-sodium',  class: 'low-sodium' },
+      { text: 'keto',        class: 'keto' },
+      { text: 'prescribed',  class: 'prescribed' }
+    ];
+
     const cycleText = document.getElementById('cycle-text');
     let currentIndex = 0;
 
     if (cycleText) {
+      // Initial setup
+      cycleText.textContent = dietTypes[0].text;
+      cycleText.className = 'cycle-text active ' + dietTypes[0].class;
+
       setInterval(() => {
-        cycleText.style.opacity = 0;
+        cycleText.classList.remove('active');
+        
         setTimeout(() => {
           currentIndex = (currentIndex + 1) % dietTypes.length;
-          cycleText.textContent = dietTypes[currentIndex];
-          cycleText.style.opacity = 1;
-        }, 800); // Fade duration
-      }, 5000); // Cycle every 5 seconds
+          const next = dietTypes[currentIndex];
+          
+          cycleText.textContent = next.text;
+          cycleText.className = 'cycle-text ' + next.class;
+          
+          setTimeout(() => {
+            cycleText.classList.add('active');
+          }, 100);
+        }, 800); // fade-out duration
+      }, 5000); // cycle interval
     }
   </script>
 </body>
