@@ -12,16 +12,6 @@ async function initDB() {
 }
 initDB();
 
-// USDA average regular prices (per lb or unit, approximate 2026 values)
-const usdaRegularPrices = {
-  'oats': 0.55,
-  'flour': 0.50,
-  'bread': 1.60,
-  'pasta': 1.20,
-  'sugar': 0.80,
-  'soup': 1.50,
-};
-
 // Lookup product by barcode using Open Food Facts API – extracts quantity
 async function lookupProductByBarcode(barcode) {
   try {
@@ -82,7 +72,10 @@ function suggestRegularItem(itemName) {
   const lowerName = itemName.toLowerCase();
   console.log('[DEBUG] Product name for counterpart:', itemName);
 
-  if (lowerName.includes('oat')) return 'oats';
+  if (lowerName.includes('oat') || lowerName.includes('oats') || lowerName.includes('quick oat') || lowerName.includes('rolled oat') || lowerName.includes('instant oat')) {
+    console.log('[DEBUG] Matched → oats');
+    return 'oats';
+  }
   if (lowerName.includes('flour')) return 'flour';
   if (lowerName.includes('bread')) return 'bread';
   if (lowerName.includes('pasta')) return 'pasta';
@@ -212,10 +205,16 @@ if (isHomePage) {
   let currentDate = '';
   let currentLocation = '';
 
+  // All DOM queries first (prevents ReferenceError crashes)
+  const scanBtn = document.getElementById('barcode-scan-btn');
+  const manualBtn = document.getElementById('manual-btn');
+  const addItemBtn = document.getElementById('add-item-btn');
+  const saveReceiptBtn = document.getElementById('save-receipt');
+  const cancelEditBtn = document.getElementById('cancel-edit');
+
   // Barcode scanning logic
   let barcodeScannerActive = false;
 
-  const scanBtn = document.getElementById('barcode-scan-btn');
   if (scanBtn) {
     console.log('[DEBUG] Scan button FOUND – attaching click listener');
     scanBtn.addEventListener('click', async () => {
@@ -311,7 +310,6 @@ if (isHomePage) {
     console.error('[DEBUG] Scan button NOT found in DOM');
   }
 
-  const manualBtn = document.getElementById('manual-btn');
   if (manualBtn) {
     console.log('[DEBUG] Manual button FOUND – attaching click listener');
     manualBtn.addEventListener('click', async () => {
@@ -424,7 +422,6 @@ if (isHomePage) {
     currentItems.forEach((item, index) => {
       let deduct = 0;
 
-      // If quantity exists, calculate total cost difference
       if (item.quantity) {
         const qtyInLb = convertToLb(item.quantity);
         if (qtyInLb) {
@@ -445,7 +442,6 @@ if (isHomePage) {
       totalDeduct += deduct > 0 ? deduct : 0;
       if (deduct > 0) hasDeductible = true;
 
-      // Force update the deductible field value
       const deductInput = document.querySelector(`.deductible[data-index="${index}"]`);
       if (deductInput) {
         deductInput.value = item.deductible;
@@ -461,44 +457,65 @@ if (isHomePage) {
     }
   }
 
-  addItemBtn.addEventListener('click', () => {
-    currentItems.push({ name: '', price: 0, regularPrice: 0, category: 'None', deductible: '', quantity: '' });
-    renderItems();
-    updateDeductibles();
-  });
+  // Attach add item button listener
+  const addItemBtn = document.getElementById('add-item-btn');
+  if (addItemBtn) {
+    console.log('[DEBUG] Add Item button FOUND – attaching click listener');
+    addItemBtn.addEventListener('click', () => {
+      console.log('[DEBUG] Add Item button CLICKED');
+      currentItems.push({ name: '', price: 0, regularPrice: 0, category: 'None', deductible: '', quantity: '' });
+      renderItems();
+      updateDeductibles();
+    });
+  } else {
+    console.error('[DEBUG] Add Item button NOT found in DOM');
+  }
 
-  saveReceiptBtn.addEventListener('click', async () => {
-    currentDate = document.getElementById('receipt-date').value;
-    currentLocation = document.getElementById('receipt-location').value;
+  // Attach save and cancel listeners
+  const saveReceiptBtn = document.getElementById('save-receipt');
+  if (saveReceiptBtn) {
+    saveReceiptBtn.addEventListener('click', async () => {
+      console.log('[DEBUG] Save button CLICKED');
+      currentDate = document.getElementById('receipt-date').value;
+      currentLocation = document.getElementById('receipt-location').value;
 
-    if (currentItems.length === 0) return alert('No items to save.');
+      if (currentItems.length === 0) return alert('No items to save.');
 
-    const receipt = {
-      date: currentDate || new Date().toISOString().split('T')[0],
-      location: currentLocation || 'Unknown Location',
-      items: [...currentItems],
-      createdAt: new Date().toISOString()
-    };
+      const receipt = {
+        date: currentDate || new Date().toISOString().split('T')[0],
+        location: currentLocation || 'Unknown Location',
+        items: [...currentItems],
+        createdAt: new Date().toISOString()
+      };
 
-    try {
-      await db.put(STORE_NAME, receipt);
-      alert('Receipt saved!');
+      try {
+        await db.put(STORE_NAME, receipt);
+        alert('Receipt saved!');
+        editSection.style.display = 'none';
+        itemsContainer.innerHTML = '';
+        document.getElementById('barcode-scan-btn').style.display = 'block';
+        document.getElementById('manual-btn').style.display = 'block';
+      } catch (err) {
+        console.error('Save error:', err);
+        alert('Error saving receipt. Check console.');
+      }
+    });
+  } else {
+    console.error('[DEBUG] Save button NOT found');
+  }
+
+  const cancelEditBtn = document.getElementById('cancel-edit');
+  if (cancelEditBtn) {
+    cancelEditBtn.addEventListener('click', () => {
+      console.log('[DEBUG] Cancel button CLICKED');
       editSection.style.display = 'none';
       itemsContainer.innerHTML = '';
       document.getElementById('barcode-scan-btn').style.display = 'block';
       document.getElementById('manual-btn').style.display = 'block';
-    } catch (err) {
-      console.error('Save error:', err);
-      alert('Error saving receipt. Check console.');
-    }
-  });
-
-  cancelEditBtn.addEventListener('click', () => {
-    editSection.style.display = 'none';
-    itemsContainer.innerHTML = '';
-    document.getElementById('barcode-scan-btn').style.display = 'block';
-    document.getElementById('manual-btn').style.display = 'block';
-  });
+    });
+  } else {
+    console.error('[DEBUG] Cancel button NOT found');
+  }
 }
 
 // History page logic
