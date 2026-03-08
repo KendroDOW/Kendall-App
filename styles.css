@@ -11,6 +11,7 @@ body {
   color: #1f2937;
   line-height: 1.5;
   min-height: 100vh;
+  overflow-x: hidden; /* Prevent horizontal scroll on phone */
 }
 
 /* Center content */
@@ -139,7 +140,7 @@ h1 {
   transform: translateY(0);
 }
 
-/* Hero buttons - stack on phone */
+/* Hero buttons - stack by default */
 .hero-buttons {
   display: flex;
   flex-direction: column;
