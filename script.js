@@ -12,6 +12,16 @@ async function initDB() {
 }
 initDB();
 
+// USDA average regular prices (per lb or unit, approximate 2026 values)
+const usdaRegularPrices = {
+  'oats': 0.55,
+  'flour': 0.50,
+  'bread': 1.60,
+  'pasta': 1.20,
+  'sugar': 0.80,
+  'soup': 1.50,
+};
+
 // Lookup product by barcode using Open Food Facts API – extracts quantity
 async function lookupProductByBarcode(barcode) {
   try {
@@ -24,7 +34,6 @@ async function lookupProductByBarcode(barcode) {
       if (!quantity && product.packaging_tags) {
         quantity = product.packaging_tags.join(', ');
       }
-      console.log('[DEBUG] Extracted quantity:', quantity);
       return {
         name: product.product_name || product.generic_name || 'Unknown Product',
         brand: product.brands || '',
@@ -63,26 +72,18 @@ function convertToLb(quantityStr) {
   if (unit === 'g') return value / 453.592;
   if (unit === 'kg') return value * 2.20462;
 
-  console.log('[DEBUG] Quantity parse failed for:', quantityStr);
   return null;
 }
 
 // Suggest regular counterpart for common specialty items
 function suggestRegularItem(itemName) {
   const lowerName = itemName.toLowerCase();
-  console.log('[DEBUG] Product name for counterpart:', itemName);
-
-  if (lowerName.includes('oat') || lowerName.includes('oats') || lowerName.includes('quick oat') || lowerName.includes('rolled oat') || lowerName.includes('instant oat')) {
-    console.log('[DEBUG] Matched → oats');
-    return 'oats';
-  }
+  if (lowerName.includes('oat')) return 'oats';
   if (lowerName.includes('flour')) return 'flour';
   if (lowerName.includes('bread')) return 'bread';
   if (lowerName.includes('pasta')) return 'pasta';
   if (lowerName.includes('sweetener') || lowerName.includes('sugar')) return 'sugar';
   if (lowerName.includes('soup')) return 'soup';
-
-  console.log('[DEBUG] No regular counterpart match');
   return '';
 }
 
@@ -91,12 +92,8 @@ function suggestRegularPrice(regularItem) {
   if (!regularItem) return null;
   const lowerItem = regularItem.toLowerCase();
   for (const [key, price] of Object.entries(usdaRegularPrices)) {
-    if (lowerItem.includes(key)) {
-      console.log('[DEBUG] USDA match found for:', key, 'price:', price);
-      return price;
-    }
+    if (lowerItem.includes(key)) return price;
   }
-  console.log('[DEBUG] No USDA price suggestion for:', regularItem);
   return null;
 }
 
@@ -192,33 +189,28 @@ document.getElementById('logout-btn')?.addEventListener('click', () => {
 const path = window.location.pathname.toLowerCase().replace(/\/$/, '');
 const filename = path.split('/').pop() || '';
 
-console.log('[DEBUG] Full pathname:', window.location.pathname);
-console.log('[DEBUG] Detected filename:', filename);
-
 const isHomePage = filename === 'home.html' || filename === 'home' || path === '' || path.includes('home');
 const isHistoryPage = filename === 'history.html' || filename === 'history' || path.includes('history');
 
 if (isHomePage) {
-  console.log('[DEBUG] HOME page detected – attaching listeners');
-
   let currentItems = [];
   let currentDate = '';
   let currentLocation = '';
 
-  // All DOM queries first (prevents ReferenceError crashes)
+  // All DOM queries first
   const scanBtn = document.getElementById('barcode-scan-btn');
   const manualBtn = document.getElementById('manual-btn');
   const addItemBtn = document.getElementById('add-item-btn');
   const saveReceiptBtn = document.getElementById('save-receipt');
   const cancelEditBtn = document.getElementById('cancel-edit');
+  const itemsContainer = document.getElementById('items-container');
+  const editSection = document.getElementById('edit-section');
 
   // Barcode scanning logic
   let barcodeScannerActive = false;
 
   if (scanBtn) {
-    console.log('[DEBUG] Scan button FOUND – attaching click listener');
     scanBtn.addEventListener('click', async () => {
-      console.log('[DEBUG] Scan button CLICKED');
       const previewContainer = document.getElementById('barcode-preview-container');
       previewContainer.style.display = 'block';
       barcodeScannerActive = true;
@@ -257,7 +249,6 @@ if (isHomePage) {
           return;
         }
         Quagga.start();
-        console.log('Quagga started');
       });
 
       Quagga.onProcessed((result) => {
@@ -266,7 +257,6 @@ if (isHomePage) {
 
       Quagga.onDetected(async (result) => {
         const code = result.codeResult.code;
-        console.log('Barcode detected:', code);
         Quagga.stop();
         document.getElementById('barcode-preview-container').style.display = 'none';
         barcodeScannerActive = false;
@@ -294,10 +284,9 @@ if (isHomePage) {
         currentLocation = suggestStoreName(cityFromGeo, product.brand);
         currentDate = new Date().toISOString().split('T')[0];
 
-        const editSection = document.getElementById('edit-section');
         editSection.style.display = 'block';
-        document.getElementById('barcode-scan-btn').style.display = 'none';
-        document.getElementById('manual-btn').style.display = 'none';
+        scanBtn.style.display = 'none';
+        manualBtn.style.display = 'none';
         document.getElementById('receipt-location').value = currentLocation;
         document.getElementById('receipt-date').value = currentDate;
         renderItems();
@@ -306,33 +295,25 @@ if (isHomePage) {
         document.querySelector('.price')?.focus();
       });
     });
-  } else {
-    console.error('[DEBUG] Scan button NOT found in DOM');
   }
 
   if (manualBtn) {
-    console.log('[DEBUG] Manual button FOUND – attaching click listener');
     manualBtn.addEventListener('click', async () => {
-      console.log('[DEBUG] Manual button CLICKED');
       currentItems = [];
       currentDate = new Date().toISOString().split('T')[0];
       const cityFromGeo = await getCurrentLocation();
       currentLocation = suggestStoreName(cityFromGeo);
-      const editSection = document.getElementById('edit-section');
       editSection.style.display = 'block';
-      document.getElementById('barcode-scan-btn').style.display = 'none';
-      document.getElementById('manual-btn').style.display = 'none';
+      scanBtn.style.display = 'none';
+      manualBtn.style.display = 'none';
       document.getElementById('receipt-location').value = currentLocation;
       document.getElementById('receipt-date').value = currentDate;
       renderItems();
       updateDeductibles();
     });
-  } else {
-    console.error('[DEBUG] Manual button NOT found in DOM');
   }
 
   function renderItems() {
-    const itemsContainer = document.getElementById('items-container');
     itemsContainer.innerHTML = '';
     currentItems.forEach((item, index) => {
       const hasRegularPrice = item.regularPrice > 0;
@@ -428,14 +409,11 @@ if (isHomePage) {
           const specialtyTotal = (item.price || 0) * qtyInLb;
           const regularTotal = (item.regularPrice || 0) * qtyInLb;
           deduct = specialtyTotal - regularTotal;
-          console.log('[DEBUG] Quantity-based deduct:', deduct, '(qty in lb:', qtyInLb, ')');
         } else {
           deduct = (item.price || 0) - (item.regularPrice || 0);
-          console.log('[DEBUG] Quantity parse failed – fallback to per-lb deduct:', deduct);
         }
       } else {
         deduct = (item.price || 0) - (item.regularPrice || 0);
-        console.log('[DEBUG] No quantity – per-lb deduct:', deduct);
       }
 
       item.deductible = deduct > 0 ? deduct.toFixed(2) : '';
@@ -457,25 +435,16 @@ if (isHomePage) {
     }
   }
 
-  // Attach add item button listener
-  const addItemBtn = document.getElementById('add-item-btn');
   if (addItemBtn) {
-    console.log('[DEBUG] Add Item button FOUND – attaching click listener');
     addItemBtn.addEventListener('click', () => {
-      console.log('[DEBUG] Add Item button CLICKED');
       currentItems.push({ name: '', price: 0, regularPrice: 0, category: 'None', deductible: '', quantity: '' });
       renderItems();
       updateDeductibles();
     });
-  } else {
-    console.error('[DEBUG] Add Item button NOT found in DOM');
   }
 
-  // Attach save and cancel listeners
-  const saveReceiptBtn = document.getElementById('save-receipt');
   if (saveReceiptBtn) {
     saveReceiptBtn.addEventListener('click', async () => {
-      console.log('[DEBUG] Save button CLICKED');
       currentDate = document.getElementById('receipt-date').value;
       currentLocation = document.getElementById('receipt-location').value;
 
@@ -500,21 +469,15 @@ if (isHomePage) {
         alert('Error saving receipt. Check console.');
       }
     });
-  } else {
-    console.error('[DEBUG] Save button NOT found');
   }
 
-  const cancelEditBtn = document.getElementById('cancel-edit');
   if (cancelEditBtn) {
     cancelEditBtn.addEventListener('click', () => {
-      console.log('[DEBUG] Cancel button CLICKED');
       editSection.style.display = 'none';
       itemsContainer.innerHTML = '';
       document.getElementById('barcode-scan-btn').style.display = 'block';
       document.getElementById('manual-btn').style.display = 'block';
     });
-  } else {
-    console.error('[DEBUG] Cancel button NOT found');
   }
 }
 
