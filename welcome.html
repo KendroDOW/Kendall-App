@@ -26,7 +26,7 @@
       diet
     </div>
 
-    <p style="font-size: 1.1rem; margin: 0 0 32px; max-width: 600px;">
+    <p class="supporting-text">
       Track the extra cost of medically necessary foods and estimate potential tax deductions — private, simple, and all on your phone.
     </p>
 
@@ -34,7 +34,7 @@
       Get Started
     </button>
 
-    <p style="margin-top: 32px; font-size: 0.9rem; color: #64748b;">
+    <p class="disclaimer">
       Not tax advice — always consult a professional for medical expense deductions.
     </p>
   </main>
@@ -81,10 +81,10 @@
       }, 5000);
     }
 
-    // Get Started button
+    // Get Started button - redirects to main app
     document.getElementById('start-login-btn')?.addEventListener('click', () => {
       localStorage.setItem('deductEatsLoggedIn', 'true');
-      window.location.href = 'home.html';  // or 'index.html' if that's your main app page
+      window.location.href = 'home.html';
     });
   </script>
 </body>
