@@ -197,7 +197,7 @@ document.getElementById('logout-btn')?.addEventListener('click', () => {
     localStorage.removeItem('deductEatsLoggedIn');
     window.location.href = 'index.html';
   }
-});
+}
 
 // Page-specific logic
 const currentPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -442,10 +442,11 @@ if (currentPage === 'home.html') {
       totalDeduct += deduct > 0 ? deduct : 0;
       if (deduct > 0) hasDeductible = true;
 
-      // Update visible deductible field
-      const deductContainer = document.querySelector(`.deductible[data-index="${index}"]`)?.parentElement;
-      if (deductContainer) {
-        deductContainer.classList.toggle('hidden', !item.deductible);
+      // Force update the deductible field value
+      const deductInput = document.querySelector(`.deductible[data-index="${index}"]`);
+      if (deductInput) {
+        deductInput.value = item.deductible;
+        deductInput.parentElement.classList.toggle('hidden', !item.deductible);
       }
     });
 
