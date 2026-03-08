@@ -347,4 +347,8 @@ h2 {
   h2 {
     font-size: 1.6rem;
   }
+
+  #deductible-summary strong {
+    font-size: 1.2rem;
+  }
 }
