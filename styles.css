@@ -1,4 +1,4 @@
-/* Reset & Base */
+/* Reset & Base (mobile-first) */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -9,30 +9,29 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: #f8fafc;
   color: #1f2937;
-  line-height: 1.6;
+  line-height: 1.5;
   min-height: 100vh;
 }
 
-/* Center content with responsive max-width */
+/* Center content */
 header, nav, main, footer, .hero {
-  max-width: 900px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 16px;
 }
 
-/* Navigation - full color and layout */
+/* Navigation - stacks on phone */
 #top-nav {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  gap: 24px;
-  padding: 16px 0;
+  gap: 12px;
+  padding: 12px 0;
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
   z-index: 10;
-  flex-wrap: wrap;
 }
 
 .nav-btn {
@@ -42,6 +41,9 @@ header, nav, main, footer, .hero {
   text-decoration: none;
   border-radius: 6px;
   transition: all 0.2s;
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
 }
 
 .nav-btn:hover, .nav-btn.active {
@@ -58,6 +60,9 @@ header, nav, main, footer, .hero {
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
 }
 
 #logout-btn:hover {
@@ -66,30 +71,24 @@ header, nav, main, footer, .hero {
 
 /* Header */
 header {
-  padding: 24px 0;
+  padding: 20px 0;
   text-align: center;
   background: white;
   border-bottom: 1px solid #e2e8f0;
 }
 
-.header-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 h1 {
-  font-size: 2.25rem;
+  font-size: 1.8rem;
   font-weight: 700;
   color: #1e293b;
+  margin: 0;
 }
 
 /* Hero with cycling tagline */
 .hero {
   text-align: center;
-  padding: 80px 20px 60px;
+  padding: 50px 16px 30px;
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  min-height: 50vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -97,20 +96,19 @@ h1 {
 }
 
 .tagline {
-  font-size: 2.8rem;
+  font-size: 1.9rem;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 40px;
+  margin-bottom: 24px;
   line-height: 1.2;
   width: 100%;
-  max-width: 800px;
 }
 
 .cycle-container {
   display: inline-block;
   position: relative;
-  min-width: 320px;
-  height: 3.5rem;
+  min-width: 160px;
+  height: 2.5rem;
   vertical-align: middle;
 }
 
@@ -121,45 +119,43 @@ h1 {
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 2.8rem;
+  font-size: 1.9rem;
   line-height: 1.1;
-  padding: 0 16px;
+  padding: 0 12px;
   white-space: nowrap;
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(15px);
   transition: all 0.8s ease-in-out;
   text-align: center;
 }
 
-.cycle-text.gluten-free { color: #10b981; text-shadow: 0 0 12px rgba(16,185,129,0.4); }
-.cycle-text.low-sodium   { color: #3b82f6; text-shadow: 0 0 12px rgba(59,130,246,0.4); }
-.cycle-text.keto         { color: #ec4899; text-shadow: 0 0 12px rgba(236,72,153,0.4); }
-.cycle-text.prescribed   { color: #8b5cf6; text-shadow: 0 0 12px rgba(139,92,246,0.4); }
+.cycle-text.gluten-free { color: #10b981; text-shadow: 0 0 10px rgba(16,185,129,0.3); }
+.cycle-text.low-sodium   { color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.3); }
+.cycle-text.keto         { color: #ec4899; text-shadow: 0 0 10px rgba(236,72,153,0.3); }
+.cycle-text.prescribed   { color: #8b5cf6; text-shadow: 0 0 10px rgba(139,92,246,0.3); }
 
 .cycle-text.active {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* Hero buttons */
+/* Hero buttons - stack on phone */
 .hero-buttons {
   display: flex;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 16px;
   width: 100%;
-  max-width: 500px;
+  max-width: 360px;
 }
 
 .primary, .secondary {
-  padding: 18px 40px;
+  padding: 14px 32px;
   border-radius: 10px;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  flex: 1;
-  min-width: 200px;
+  width: 100%;
 }
 
 .primary {
@@ -168,7 +164,7 @@ h1 {
   border: none;
 }
 
-.primary:hover { background: #1d4ed8; transform: translateY(-2px); }
+.primary:hover { background: #1d4ed8; }
 
 .secondary {
   background: white;
@@ -176,43 +172,42 @@ h1 {
   border: 2px solid #e2e8f0;
 }
 
-.secondary:hover { background: #f1f5f9; transform: translateY(-2px); }
+.secondary:hover { background: #f1f5f9; }
 
 /* Form & Items */
 #edit-section {
-  padding: 40px 20px;
-  max-width: 900px;
-  margin: 0 auto;
+  padding: 32px 16px;
+  max-width: 100%;
 }
 
 h2 {
-  font-size: 2rem;
-  margin-bottom: 32px;
+  font-size: 1.8rem;
+  margin-bottom: 24px;
   text-align: center;
 }
 
 .item-block {
   background: white;
-  padding: 24px;
+  padding: 20px;
   border-radius: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .form-field {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .form-field label {
   display: block;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #374151;
 }
 
 .form-field input, .form-field select {
   width: 100%;
-  padding: 14px;
+  padding: 12px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 1rem;
@@ -225,131 +220,131 @@ h2 {
 
 .dollar-sign {
   position: absolute;
-  left: 16px;
+  left: 14px;
   top: 50%;
   transform: translateY(-50%);
   color: #6b7280;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
 .price {
-  padding-left: 40px !important;
+  padding-left: 36px !important;
 }
 
 .add-btn {
   background: #f3f4f6;
   color: #1f2937;
   border: 1px solid #d1d5db;
-  padding: 16px;
+  padding: 14px;
   border-radius: 10px;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1rem;
   cursor: pointer;
   width: 100%;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .edit-actions {
   display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .edit-actions button {
-  flex: 1;
-  padding: 16px;
+  padding: 14px;
   border-radius: 10px;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  min-width: 140px;
 }
 
 #deductible-summary {
   background: #e0f2fe;
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px;
   text-align: right;
-  margin-top: 32px;
+  margin-top: 24px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
 #deductible-summary strong {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   color: #1e40af;
 }
 
 /* Footer */
 #social-footer {
   text-align: center;
-  padding: 40px 20px 20px;
+  padding: 32px 16px 16px;
   color: #64748b;
   border-top: 1px solid #e2e8f0;
 }
 
 .social-icons {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .social-link {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   margin: 0 12px;
   color: #475569;
   text-decoration: none;
 }
 
-/* Responsive adjustments for phone */
-@media (max-width: 768px) {
+/* Desktop adjustments (larger screens only) */
+@media (min-width: 769px) {
   header, main, footer, .hero {
-    padding: 0 16px;
+    padding: 0 32px;
   }
 
   .hero {
-    padding: 60px 16px 40px;
+    padding: 80px 32px 60px;
   }
 
   .tagline {
-    font-size: 2rem;
+    font-size: 2.8rem;
   }
 
   .cycle-container {
-    min-width: 180px;
+    min-width: 320px;
+    height: 3.5rem;
   }
 
   .cycle-text {
-    font-size: 2rem;
+    font-size: 2.8rem;
   }
 
   .hero-buttons {
-    flex-direction: column;
-    gap: 16px;
+    flex-direction: row;
+    gap: 24px;
+    max-width: 500px;
   }
 
   #top-nav {
-    flex-direction: column;
-    gap: 12px;
-    padding: 12px 0;
+    flex-direction: row;
+    gap: 24px;
+    padding: 16px 0;
+  }
+
+  .nav-btn, #logout-btn {
+    width: auto;
+    padding: 8px 16px;
   }
 
   .edit-actions {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .item-block {
-    padding: 16px;
+    flex-direction: row;
+    gap: 16px;
   }
 
   h1 {
-    font-size: 1.8rem;
+    font-size: 2.25rem;
   }
 
   h2 {
-    font-size: 1.6rem;
+    font-size: 2rem;
   }
 
   #deductible-summary strong {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
   }
 }
-body { background: #fff3e0 !important; } /* temporary orange tint to prove CSS loaded */
