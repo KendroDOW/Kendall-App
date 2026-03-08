@@ -389,4 +389,137 @@ header {
 .hide-scan-btn {
   display: none !important;
 }
+/* Basic app styles */
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #f8fafc;
+  color: #1f2937;
+  margin: 0;
+  padding: 0;
+}
+
+.hero {
+  text-align: center;
+  padding: 60px 20px 40px;
+  background: #f8fafc;
+}
+
+.tagline {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 32px;
+}
+
+.cycle-text {
+  display: inline-block;
+  min-width: 150px; /* Prevent layout shift */
+  color: #2563eb;
+  opacity: 1;
+  transition: opacity 0.8s ease-in-out;
+}
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.primary {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.primary:hover {
+  background: #1d4ed8;
+}
+
+.secondary {
+  background: #f1f5f9;
+  color: #1f2937;
+  border: 1px solid #e2e8f0;
+  padding: 16px 32px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.secondary:hover {
+  background: #e2e8f0;
+}
+
+/* Hide class for dynamic fields */
+.hidden {
+  display: none !important;
+}
+
+/* Form styling (to make it look professional) */
+.item-block {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.form-field {
+  margin-bottom: 16px;
+}
+
+.form-field label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #374151;
+}
+
+.form-field input, .form-field select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+}
+
+.add-btn {
+  background: #f3f4f6;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 24px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.edit-actions button {
+  flex: 1;
+}
+
+/* Deductible summary */
+#deductible-summary {
+  background: #e0f2fe;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: right;
+}
+
+#deductible-summary strong {
+  font-size: 1.1rem;
+  color: #1e40af;
+}
 
