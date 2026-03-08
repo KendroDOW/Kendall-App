@@ -13,20 +13,70 @@
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
 
   <style>
-    .input-with-dollar {
-      position: relative;
+    .hero {
+      text-align: center;
+      padding: 60px 20px 40px;
+      background: #f8fafc;
     }
-    .dollar-sign {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #555;
-      pointer-events: none;
+
+    .tagline {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 32px;
     }
-    .price {
-      padding-left: 28px !important;
+
+    .cycle-text {
+      display: inline-block;
+      min-width: 150px; /* Prevent layout shift */
+      color: #2563eb; /* Accent color */
+      animation: fadeIn 0.8s ease-in-out;
     }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .primary {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .primary:hover {
+      background: #1d4ed8;
+    }
+
+    .secondary {
+      background: #f1f5f9;
+      color: #1f2937;
+      border: 1px solid #e2e8f0;
+      padding: 16px 32px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .secondary:hover {
+      background: #e2e8f0;
+    }
+
+    /* Hide class for dynamic fields */
     .hidden {
       display: none !important;
     }
@@ -49,11 +99,18 @@
   </header>
 
   <main id="main-content">
-    <div class="hero-action bottom-action">
-      <button id="barcode-scan-btn" class="big-action scan-btn">
-        <span class="camera-icon">📷</span> Scan Barcode
-      </button>
-      <button id="manual-btn" class="manual-link">Manually Add Receipt</button>
+    <!-- Hero section with cycling tagline -->
+    <div class="hero">
+      <div class="tagline">
+        Money back for your <span id="cycle-text" class="cycle-text">gluten-free</span> diet
+      </div>
+
+      <div class="hero-buttons">
+        <button id="barcode-scan-btn" class="primary">
+          <span class="camera-icon">📷</span> Scan Barcode
+        </button>
+        <button id="manual-btn" class="secondary">Manually Add Receipt</button>
+      </div>
     </div>
 
     <!-- Barcode scanning preview area -->
@@ -111,5 +168,23 @@
   </footer>
 
   <script src="script.js"></script>
+
+  <!-- Cycling tagline script -->
+  <script>
+    const dietTypes = ['gluten-free', 'low-sodium', 'keto', 'prescribed'];
+    const cycleText = document.getElementById('cycle-text');
+    let currentIndex = 0;
+
+    if (cycleText) {
+      setInterval(() => {
+        cycleText.style.opacity = 0;
+        setTimeout(() => {
+          currentIndex = (currentIndex + 1) % dietTypes.length;
+          cycleText.textContent = dietTypes[currentIndex];
+          cycleText.style.opacity = 1;
+        }, 800); // Fade duration
+      }, 5000); // Cycle every 5 seconds
+    }
+  </script>
 </body>
 </html>
