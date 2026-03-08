@@ -6,15 +6,15 @@
   <title>DeductEats - Home</title>
   <link rel="stylesheet" href="styles.css">
   
-  <!-- Google Fonts (Inter) for modern typography -->
+  <!-- Google Fonts (Inter) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- idb library - for IndexedDB -->
+  <!-- idb library -->
   <script src="https://unpkg.com/idb@7.1.1/build/umd.js"></script>
   
-  <!-- QuaggaJS for barcode scanning -->
+  <!-- QuaggaJS -->
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
 
   <style>
@@ -25,24 +25,25 @@
     }
 
     body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', system-ui, sans-serif;
       background: #f8fafc;
       color: #1f2937;
       line-height: 1.6;
       min-height: 100vh;
     }
 
-    /* Center content with responsive max-width */
-    header, main, footer, .hero {
+    /* Center everything */
+    header, nav, main, footer {
       max-width: 900px;
       margin: 0 auto;
       padding: 0 20px;
     }
 
-    /* Navigation - full color and layout */
+    /* Navigation */
     #top-nav {
       display: flex;
       justify-content: center;
+      align-items: center;
       gap: 24px;
       padding: 16px 0;
       background: #ffffff;
@@ -111,6 +112,7 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      align-items: center;
     }
 
     .tagline {
@@ -119,13 +121,15 @@
       color: #1e293b;
       margin-bottom: 40px;
       line-height: 1.2;
+      width: 100%;
+      max-width: 800px;
     }
 
     .cycle-container {
       display: inline-block;
       position: relative;
-      min-width: 300px;
-      height: 3rem;
+      min-width: 320px; /* Even wider to safely fit "gluten-free" and "low-sodium" */
+      height: 3.5rem; /* Slightly taller to prevent cutoff */
       vertical-align: middle;
     }
 
@@ -138,7 +142,7 @@
       font-weight: 800;
       font-size: 2.8rem;
       line-height: 1.1;
-      padding: 0 12px;
+      padding: 0 16px;
       white-space: nowrap;
       opacity: 0;
       transform: translateY(20px);
@@ -161,6 +165,8 @@
       justify-content: center;
       gap: 20px;
       flex-wrap: wrap;
+      width: 100%;
+      max-width: 500px;
     }
 
     .primary, .secondary {
@@ -170,6 +176,8 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
+      flex: 1;
+      min-width: 200px;
     }
 
     .primary {
