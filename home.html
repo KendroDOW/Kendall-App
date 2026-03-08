@@ -18,13 +18,18 @@
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
 
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       background: #f8fafc;
       color: #1f2937;
       line-height: 1.6;
-      margin: 0;
-      padding: 0;
+      min-height: 100vh;
     }
 
     /* Center content */
@@ -40,11 +45,12 @@
       justify-content: center;
       gap: 24px;
       padding: 16px 0;
-      background: white;
+      background: #ffffff;
       border-bottom: 1px solid #e2e8f0;
       position: sticky;
       top: 0;
       z-index: 10;
+      flex-wrap: wrap;
     }
 
     .nav-btn {
@@ -59,6 +65,21 @@
     .nav-btn:hover, .nav-btn.active {
       background: #eff6ff;
       color: #1d4ed8;
+    }
+
+    #logout-btn {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #logout-btn:hover {
+      background: #dc2626;
     }
 
     /* Header */
@@ -86,14 +107,14 @@
       text-align: center;
       padding: 80px 20px 60px;
       background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-      min-height: 60vh;
+      min-height: 50vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
     }
 
     .tagline {
-      font-size: 2.8rem;
+      font-size: 2.5rem;
       font-weight: 700;
       color: #1e293b;
       margin-bottom: 40px;
@@ -115,7 +136,7 @@
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 2.8rem;
+      font-size: 2.5rem;
       line-height: 1.1;
       padding: 0 12px;
       white-space: nowrap;
@@ -241,6 +262,7 @@
     .edit-actions {
       display: flex;
       gap: 16px;
+      flex-wrap: wrap;
     }
 
     .edit-actions button {
@@ -250,6 +272,7 @@
       font-size: 1.1rem;
       font-weight: 600;
       cursor: pointer;
+      min-width: 140px;
     }
 
     #deductible-summary {
@@ -285,7 +308,7 @@
       text-decoration: none;
     }
 
-    /* Responsive */
+    /* Responsive adjustments for phone */
     @media (max-width: 768px) {
       .hero {
         padding: 60px 16px 40px;
@@ -307,6 +330,21 @@
         flex-direction: column;
         gap: 16px;
       }
+
+      #top-nav {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 0;
+      }
+
+      .edit-actions {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .item-block {
+        padding: 16px;
+      }
     }
   </style>
 </head>
@@ -317,12 +355,12 @@
     <a href="history.html" class="nav-btn">History</a>
     <a href="learn.html" class="nav-btn">Learn</a>
     <a href="settings.html" class="nav-btn">Settings</a>
+    <button id="logout-btn">Log Out</button>
   </nav>
 
   <header>
     <div class="header-container">
       <h1>DeductEats</h1>
-      <button id="logout-btn">Log Out</button>
     </div>
   </header>
 
@@ -380,7 +418,6 @@
         <button id="cancel-edit" class="secondary">Cancel</button>
       </div>
 
-      <!-- Deductible summary with disclaimer -->
       <div id="deductible-summary" style="margin-top:24px; padding:16px; background:#e6f3ff; border-radius:8px; text-align:right; display:none;">
         <strong>Total Estimated Deductible: <span id="total-deductible">$0.00</span></strong>
         <p style="font-size:0.85rem; color:#555; margin-top:8px;">
@@ -414,7 +451,6 @@
     let currentIndex = 0;
 
     if (cycleText) {
-      // Initial setup
       cycleText.textContent = dietTypes[0].text;
       cycleText.className = 'cycle-text active ' + dietTypes[0].class;
 
@@ -431,8 +467,8 @@
           setTimeout(() => {
             cycleText.classList.add('active');
           }, 100);
-        }, 800); // fade-out duration
-      }, 5000); // cycle interval
+        }, 800);
+      }, 5000);
     }
   </script>
 </body>
