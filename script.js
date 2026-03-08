@@ -485,9 +485,10 @@ if (isHomePage) {
 }
 
 // History page logic
-if (currentPage === 'history.html') {
+if (isHistoryPage) {
   async function loadLogs() {
     const logList = document.getElementById('log-list');
+    if (!logList) return;
     logList.innerHTML = '<p>Loading history...</p>';
 
     try {
@@ -529,6 +530,7 @@ if (currentPage === 'history.html') {
 
   function showReport(receipt) {
     const modal = document.getElementById('report-modal');
+    if (!modal) return;
     const title = document.getElementById('report-title');
     const itemsDiv = document.getElementById('report-items');
     const totalDiv = document.getElementById('report-total');
