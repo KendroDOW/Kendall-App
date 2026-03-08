@@ -6,23 +6,23 @@
   <title>DeductEats - History</title>
   <link rel="stylesheet" href="styles.css">
   
-  <!-- idb library - required for IndexedDB (must load before script.js) -->
+  <!-- idb library -->
   <script src="https://unpkg.com/idb@7.1.1/build/umd.js"></script>
 </head>
 <body>
 
-<nav id="top-nav">
-  <a href="index.html" class="nav-btn">Home</a>
-  <a href="history.html" class="nav-btn">History</a>
-  <a href="learn.html" class="nav-btn">Learn</a>
-  <a href="settings.html" class="nav-btn">Settings</a>
-  <button id="logout-btn">Log Out</button>
-</nav>
+  <nav id="top-nav">
+    <a href="welcome.html" class="nav-btn">Welcome</a>
+    <a href="home.html" class="nav-btn">Home</a>
+    <a href="history.html" class="nav-btn active">History</a>
+    <a href="learn.html" class="nav-btn">Learn</a>
+    <a href="settings.html" class="nav-btn">Settings</a>
+    <button id="logout-btn">Log Out</button>
+  </nav>
 
   <header>
     <div class="header-container">
       <h1>DeductEats</h1>
-      <button id="logout-btn">Log Out</button>
     </div>
   </header>
 
@@ -31,7 +31,7 @@
     <div id="log-list"></div>
     <button id="export-csv" class="primary">Export to CSV</button>
 
-    <!-- Report Modal (hidden until an entry is clicked) -->
+    <!-- Report Modal -->
     <section id="report-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center;">
       <div style="background:white; border-radius:12px; padding:24px; width:90%; max-width:500px; max-height:80%; overflow-y:auto; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
         <h3 id="report-title"></h3>
@@ -51,8 +51,6 @@
     <small>© 2026 DeductEats • Saint George, Utah</small>
   </footer>
 
-  <!-- Your main script (after idb) -->
   <script src="script.js"></script>
 </body>
-
 </html>
