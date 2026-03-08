@@ -197,7 +197,7 @@ if (isHomePage) {
   let currentDate = '';
   let currentLocation = '';
 
-  // All DOM queries first
+  // All DOM queries at the top
   const scanBtn = document.getElementById('barcode-scan-btn');
   const manualBtn = document.getElementById('manual-btn');
   const addItemBtn = document.getElementById('add-item-btn');
@@ -435,6 +435,7 @@ if (isHomePage) {
     }
   }
 
+  // Attach add item button
   if (addItemBtn) {
     addItemBtn.addEventListener('click', () => {
       currentItems.push({ name: '', price: 0, regularPrice: 0, category: 'None', deductible: '', quantity: '' });
@@ -443,6 +444,7 @@ if (isHomePage) {
     });
   }
 
+  // Attach save receipt button
   if (saveReceiptBtn) {
     saveReceiptBtn.addEventListener('click', async () => {
       currentDate = document.getElementById('receipt-date').value;
@@ -471,6 +473,7 @@ if (isHomePage) {
     });
   }
 
+  // Attach cancel edit button
   if (cancelEditBtn) {
     cancelEditBtn.addEventListener('click', () => {
       editSection.style.display = 'none';
