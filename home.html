@@ -6,7 +6,7 @@
   <title>DeductEats - Home</title>
   <link rel="stylesheet" href="styles.css">
   
-  <!-- Google Fonts (Inter) for modern, professional typography -->
+  <!-- Google Fonts (Inter) for modern typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -22,10 +22,66 @@
       font-family: 'Inter', system-ui, sans-serif;
       background: #f8fafc;
       color: #1f2937;
+      line-height: 1.6;
       margin: 0;
       padding: 0;
     }
 
+    /* Center content */
+    header, main, footer {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Navigation */
+    #top-nav {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      padding: 16px 0;
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .nav-btn {
+      padding: 8px 16px;
+      font-weight: 500;
+      color: #475569;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    /* Header */
+    header {
+      padding: 24px 0;
+      text-align: center;
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    /* Hero with cycling tagline */
     .hero {
       text-align: center;
       padding: 80px 20px 60px;
@@ -37,7 +93,7 @@
     }
 
     .tagline {
-      font-size: 2.5rem;
+      font-size: 2.8rem;
       font-weight: 700;
       color: #1e293b;
       margin-bottom: 40px;
@@ -47,33 +103,32 @@
     .cycle-container {
       display: inline-block;
       position: relative;
-      min-width: 220px; /* Wide enough for longest phrase "gluten-free" */
-      height: 2.5rem;
+      min-width: 300px;
+      height: 3rem;
       vertical-align: middle;
-      overflow: hidden;
     }
 
     .cycle-text {
       position: absolute;
-      left: 0;
-      right: 0;
-      top: 0;
-      bottom: 0;
+      inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 2.5rem;
+      font-size: 2.8rem;
+      line-height: 1.1;
+      padding: 0 12px;
+      white-space: nowrap;
       opacity: 0;
       transform: translateY(20px);
       transition: all 0.8s ease-in-out;
       text-align: center;
     }
 
-    .cycle-text.gluten-free { color: #10b981; text-shadow: 0 0 10px rgba(16,185,129,0.3); }
-    .cycle-text.low-sodium   { color: #3b82f6; text-shadow: 0 0 10px rgba(59,130,246,0.3); }
-    .cycle-text.keto         { color: #ec4899; text-shadow: 0 0 10px rgba(236,72,153,0.3); }
-    .cycle-text.prescribed   { color: #8b5cf6; text-shadow: 0 0 10px rgba(139,92,246,0.3); }
+    .cycle-text.gluten-free { color: #10b981; text-shadow: 0 0 12px rgba(16,185,129,0.4); }
+    .cycle-text.low-sodium   { color: #3b82f6; text-shadow: 0 0 12px rgba(59,130,246,0.4); }
+    .cycle-text.keto         { color: #ec4899; text-shadow: 0 0 12px rgba(236,72,153,0.4); }
+    .cycle-text.prescribed   { color: #8b5cf6; text-shadow: 0 0 12px rgba(139,92,246,0.4); }
 
     .cycle-text.active {
       opacity: 1;
@@ -83,78 +138,104 @@
     .hero-buttons {
       display: flex;
       justify-content: center;
-      gap: 16px;
-      margin-top: 32px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .primary, .secondary {
+      padding: 18px 40px;
+      border-radius: 10px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
     .primary {
       background: #2563eb;
       color: white;
       border: none;
-      padding: 16px 32px;
-      border-radius: 8px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
     }
 
-    .primary:hover { background: #1d4ed8; }
+    .primary:hover { background: #1d4ed8; transform: translateY(-2px); }
 
     .secondary {
-      background: #f1f5f9;
+      background: white;
       color: #1f2937;
-      border: 1px solid #e2e8f0;
-      padding: 16px 32px;
-      border-radius: 8px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
+      border: 2px solid #e2e8f0;
     }
 
-    .secondary:hover { background: #e2e8f0; }
+    .secondary:hover { background: #f1f5f9; transform: translateY(-2px); }
 
-    .hidden { display: none !important; }
+    /* Form & Items */
+    #edit-section {
+      padding: 40px 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 32px;
+      text-align: center;
+    }
 
     .item-block {
       background: white;
-      padding: 20px;
+      padding: 24px;
       border-radius: 12px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
     .form-field {
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
     .form-field label {
       display: block;
-      font-weight: 500;
-      margin-bottom: 6px;
+      font-weight: 600;
+      margin-bottom: 8px;
       color: #374151;
     }
 
     .form-field input, .form-field select {
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       border: 1px solid #d1d5db;
-      border-radius: 6px;
-      background: white;
+      border-radius: 8px;
       font-size: 1rem;
+      background: white;
+    }
+
+    .input-with-dollar {
+      position: relative;
+    }
+
+    .dollar-sign {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      font-size: 1.2rem;
+    }
+
+    .price {
+      padding-left: 40px !important;
     }
 
     .add-btn {
       background: #f3f4f6;
       color: #1f2937;
       border: 1px solid #d1d5db;
-      padding: 14px;
-      border-radius: 8px;
+      padding: 16px;
+      border-radius: 10px;
       font-weight: 600;
+      font-size: 1.1rem;
       cursor: pointer;
-      margin-bottom: 24px;
       width: 100%;
+      margin-bottom: 32px;
     }
 
     .edit-actions {
@@ -165,7 +246,7 @@
     .edit-actions button {
       flex: 1;
       padding: 16px;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 1.1rem;
       font-weight: 600;
       cursor: pointer;
@@ -174,14 +255,58 @@
     #deductible-summary {
       background: #e0f2fe;
       border-radius: 12px;
-      padding: 20px;
+      padding: 24px;
       text-align: right;
       margin-top: 32px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
 
     #deductible-summary strong {
-      font-size: 1.25rem;
+      font-size: 1.4rem;
       color: #1e40af;
+    }
+
+    /* Footer */
+    #social-footer {
+      text-align: center;
+      padding: 40px 20px 20px;
+      color: #64748b;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .social-icons {
+      margin-bottom: 16px;
+    }
+
+    .social-link {
+      font-size: 1.8rem;
+      margin: 0 12px;
+      color: #475569;
+      text-decoration: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero {
+        padding: 60px 16px 40px;
+      }
+
+      .tagline {
+        font-size: 2rem;
+      }
+
+      .cycle-container {
+        min-width: 180px;
+      }
+
+      .cycle-text {
+        font-size: 2rem;
+      }
+
+      .hero-buttons {
+        flex-direction: column;
+        gap: 16px;
+      }
     }
   </style>
 </head>
