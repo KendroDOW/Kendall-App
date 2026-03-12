@@ -20,12 +20,16 @@
 <body>
 
   <nav id="top-nav">
-    <a href="welcome.html" class="nav-btn">Welcome</a>
-    <a href="home.html" class="nav-btn active">Home</a>
-    <a href="history.html" class="nav-btn">History</a>
-    <a href="learn.html" class="nav-btn">Learn</a>
-    <a href="settings.html" class="nav-btn">Settings</a>
-    <button id="logout-btn">Log Out</button>
+    <div class="nav-logo">DeductEats</div>
+    <div class="nav-links">
+      <a href="welcome.html" class="nav-btn">Welcome</a>
+      <a href="home.html" class="nav-btn active">Home</a>
+      <a href="history.html" class="nav-btn">History</a>
+      <a href="learn.html" class="nav-btn">Learn</a>
+      <a href="settings.html" class="nav-btn">Settings</a>
+      <button id="logout-btn">Log Out</button>
+    </div>
+    <button class="hamburger" id="hamburger-btn">≡</button>
   </nav>
 
   <header>
@@ -137,6 +141,13 @@
         }, 800);
       }, 5000);
     }
+  </script>
+
+  <!-- Hamburger menu toggle -->
+  <script>
+    document.getElementById('hamburger-btn')?.addEventListener('click', () => {
+      document.querySelector('.nav-links').classList.toggle('active');
+    });
   </script>
 </body>
 </html>
