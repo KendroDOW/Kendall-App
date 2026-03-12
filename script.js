@@ -398,20 +398,24 @@ if (isHomePage) {
         const regularItem = suggestRegularItem(el.value);
         currentItems[idx].regularPrice = suggestRegularPrice(regularItem) || 0;
         currentItems[idx].category = suggestCategory([], el.value);
-        // Update only the affected fields without full re-render
+
+        // Targeted update - no full re-render
         const itemBlock = el.closest('.item-block');
         if (itemBlock) {
+          // Update USDA price field
           const usdaInput = itemBlock.querySelector('.regular-price');
           if (usdaInput) {
             usdaInput.value = currentItems[idx].regularPrice;
             usdaInput.parentElement.classList.toggle('hidden', !currentItems[idx].regularPrice);
           }
 
+          // Update category dropdown
           const categorySelect = itemBlock.querySelector('.category');
           if (categorySelect) {
             categorySelect.value = currentItems[idx].category;
           }
         }
+
         updateDeductibles();
       } else if (el.matches('.quantity')) {
         currentItems[idx].quantity = el.value;
