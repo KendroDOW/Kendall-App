@@ -21,7 +21,7 @@ header, main, footer, .hero {
   padding: 0 16px;
 }
 
-/* Navigation - desktop horizontal, phone hamburger */
+/* Navigation - centered layout */
 #top-nav {
   display: flex;
   justify-content: space-between;
@@ -37,12 +37,15 @@ header, main, footer, .hero {
 .nav-logo {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1976d2; /* Primary blue */
+  color: #1976d2;
+  flex: 1;
+  text-align: left;
 }
 
 .nav-links {
   display: flex;
   gap: 20px;
+  align-items: center;
 }
 
 .nav-btn {
@@ -84,9 +87,19 @@ header, main, footer, .hero {
   border: none;
   color: #475569;
   cursor: pointer;
+  padding: 8px;
 }
 
 @media (max-width: 768px) {
+  #top-nav {
+    justify-content: space-between;
+  }
+
+  .nav-logo {
+    text-align: center;
+    flex: none;
+  }
+
   .nav-links {
     display: none;
     flex-direction: column;
@@ -104,14 +117,7 @@ header, main, footer, .hero {
     display: flex;
   }
 
-  .nav-btn {
-    width: 100%;
-    text-align: center;
-    padding: 12px;
-    font-size: 1.1rem;
-  }
-
-  #logout-btn {
+  .nav-btn, #logout-btn {
     width: 100%;
     text-align: center;
     padding: 12px;
@@ -120,10 +126,6 @@ header, main, footer, .hero {
 
   .hamburger {
     display: block;
-  }
-
-  .nav-logo {
-    font-size: 1.4rem;
   }
 }
 
@@ -136,7 +138,7 @@ header {
 }
 
 h1 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
   color: #1976d2;
   margin: 0;
@@ -154,7 +156,7 @@ h1 {
 }
 
 .tagline {
-  font-size: 2rem;
+  font-size: 1.9rem;
   font-weight: 700;
   color: #1e293b;
   margin-bottom: 24px;
@@ -177,7 +179,7 @@ h1 {
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 2rem;
+  font-size: 1.9rem;
   line-height: 1.1;
   padding: 0 12px;
   white-space: nowrap;
@@ -198,7 +200,7 @@ h1 {
   transform: translateY(0);
 }
 
-/* Hero buttons */
+/* Hero buttons - stack by default */
 .hero-buttons {
   display: flex;
   flex-direction: column;
@@ -232,6 +234,68 @@ h1 {
 }
 
 .secondary:hover { background: #f1f5f9; }
+
+/* Barcode preview - full viewport on phone */
+#barcode-preview-container {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+
+#barcode-preview-container h3 {
+  color: white;
+  margin: 16px 0 8px;
+  font-size: 1.4rem;
+}
+
+#barcode-preview-container p {
+  color: #ddd;
+  margin-bottom: 16px;
+  font-size: 1rem;
+  max-width: 90%;
+  text-align: center;
+}
+
+#barcode-video-container {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 4/3;
+  background: #000;
+  overflow: hidden;
+}
+
+#barcode-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#barcode-guide {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 80%;
+  height: 40%;
+  border: 4px dashed #ff0000;
+  border-radius: 12px;
+  pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+}
+
+#stop-barcode-scan {
+  margin-top: 24px;
+  width: 90%;
+  max-width: 320px;
+  padding: 14px;
+}
 
 /* Form & Items */
 #edit-section {
@@ -388,6 +452,10 @@ h2 {
   .nav-btn, #logout-btn {
     width: auto;
     padding: 8px 16px;
+  }
+
+  .hamburger {
+    display: none;
   }
 
   .edit-actions {
