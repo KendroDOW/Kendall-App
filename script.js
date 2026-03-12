@@ -12,7 +12,7 @@ async function initDB() {
 }
 initDB();
 
-// USDA average regular prices (per lb or unit, approximate 2026 values)
+// USDA average regular prices (per lb or unit, approximate values)
 const usdaRegularPrices = {
   'oats': 0.55,
   'flour': 0.50,
@@ -49,7 +49,7 @@ async function lookupProductByBarcode(barcode) {
   }
 }
 
-// Category suggestion (used when rendering)
+// Category suggestion based on keywords in name or tags
 function suggestCategory(tags, itemName = '') {
   const allText = [
     ...(tags || []).join(' ').toLowerCase(),
@@ -83,7 +83,7 @@ function convertToLb(quantityStr) {
   return null;
 }
 
-// Suggest regular counterpart
+// Suggest regular counterpart for common specialty items
 function suggestRegularItem(itemName) {
   if (!itemName) return '';
 
@@ -382,12 +382,20 @@ if (isHomePage) {
     // Live updates
     itemsContainer.addEventListener('input', (e) => {
       const el = e.target;
+      const idx = el.dataset.index;
+
       if (el.matches('.price')) {
-        const idx = el.dataset.index;
         currentItems[idx].price = parseFloat(el.value) || 0;
         updateDeductibles();
+      } else if (el.matches('.name')) {
+        currentItems[idx].name = el.value;
+        // Auto-update regular price when name changes
+        const regularItem = suggestRegularItem(el.value);
+        currentItems[idx].regularPrice = suggestRegularPrice(regularItem) || 0;
+        // Auto-update category
+        currentItems[idx].category = suggestCategory([], el.value);
+        renderItems();  // Re-render to update USDA and category fields
       } else if (el.matches('.quantity')) {
-        const idx = el.dataset.index;
         currentItems[idx].quantity = el.value;
         updateDeductibles();
       }
@@ -395,10 +403,9 @@ if (isHomePage) {
 
     itemsContainer.addEventListener('change', (e) => {
       const el = e.target;
-      if (el.matches('.name, .category')) {
+      if (el.matches('.category')) {
         const idx = el.dataset.index;
-        const key = el.className;
-        currentItems[idx][key] = el.value;
+        currentItems[idx].category = el.value;
         updateDeductibles();
       }
     });
@@ -422,7 +429,7 @@ if (isHomePage) {
       let deduct = 0;
 
       console.log(`Item ${index + 1}: ${item.name}`);
-      console.log(`  Entered price: $${item.price || 0}`);
+      console.log(`  Entered total price: $${item.price || 0}`);
       console.log(`  USDA regular price: $${item.regularPrice || 0}/lb`);
       console.log(`  Quantity: ${item.quantity || '(none)'}`);
 
@@ -470,7 +477,7 @@ if (isHomePage) {
     }
   }
 
-  // Add item button
+  // Attach add item button
   if (addItemBtn) {
     addItemBtn.addEventListener('click', () => {
       currentItems.push({ name: '', price: 0, regularPrice: 0, category: 'None', deductible: '', quantity: '' });
