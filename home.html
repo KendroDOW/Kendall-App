@@ -144,10 +144,16 @@
   </script>
 
   <!-- Hamburger menu toggle -->
-  <script>
-    document.getElementById('hamburger-btn')?.addEventListener('click', () => {
-      document.querySelector('.nav-links').classList.toggle('active');
+ <script>
+  const hamburgerBtn = document.getElementById('hamburger-btn');
+  const navLinks = document.querySelector('.nav-links');
+
+  if (hamburgerBtn && navLinks) {
+    hamburgerBtn.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
     });
-  </script>
+  }
+</script>
 </body>
 </html>
+
