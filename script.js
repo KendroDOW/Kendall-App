@@ -1,142 +1,651 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DeductEats - Home</title>
-  <link rel="stylesheet" href="styles.css">
-  
-  <!-- Google Fonts (Inter) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- idb library -->
-  <script src="https://unpkg.com/idb@7.1.1/build/umd.js"></script>
-  
-  <!-- QuaggaJS -->
-  <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
-</head>
-<body>
+// IndexedDB setup
+const DB_NAME = 'DeductEatsDB';
+const STORE_NAME = 'receipts';
+let db;
 
-  <nav id="top-nav">
-    <a href="welcome.html" class="nav-btn">Welcome</a>
-    <a href="home.html" class="nav-btn active">Home</a>
-    <a href="history.html" class="nav-btn">History</a>
-    <a href="learn.html" class="nav-btn">Learn</a>
-    <a href="settings.html" class="nav-btn">Settings</a>
-    <button id="logout-btn">Log Out</button>
-  </nav>
+async function initDB() {
+  db = await idb.openDB(DB_NAME, 1, {
+    upgrade(db) {
+      db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+    },
+  });
+}
+initDB();
 
-  <header>
-    <div class="header-container">
-      <h1>DeductEats</h1>
-    </div>
-  </header>
+// USDA average regular prices (per lb or unit, approximate values)
+const usdaRegularPrices = {
+  'oats': 0.55,
+  'flour': 0.50,
+  'bread': 1.60,
+  'pasta': 1.20,
+  'sugar': 0.80,
+  'soup': 1.50,
+};
 
-  <main id="main-content">
-    <div class="hero">
-      <div class="tagline">
-        Money back for your 
-        <span class="cycle-container">
-          <span id="cycle-text" class="cycle-text gluten-free">gluten-free</span>
-        </span> 
-        diet
-      </div>
+// Lookup product by barcode using Open Food Facts API
+async function lookupProductByBarcode(barcode) {
+  try {
+    const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+    const data = await response.json();
 
-      <div class="hero-buttons">
-        <button id="barcode-scan-btn" class="primary">
-          <span class="camera-icon">📷</span> Scan Barcode
-        </button>
-        <button id="manual-btn" class="secondary">Manually Add Receipt</button>
-      </div>
-    </div>
-
-    <div id="barcode-preview-container" style="display:none; margin-top:24px; text-align:center;">
-      <h3>Scan Barcode</h3>
-      <p style="color:#555; margin-bottom:16px;">Align the barcode inside the red box. Zoom in if needed.</p>
-      <div id="barcode-video-container" style="position:relative; width:100%; max-width:480px; margin:0 auto; background:#000; border-radius:12px; overflow:hidden;">
-        <video id="barcode-video" autoplay playsinline style="width:100%; height:auto;"></video>
-        <div id="barcode-guide" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:80%; height:30%; border:4px dashed red; border-radius:12px; pointer-events:none; box-shadow:0 0 0 9999px rgba(0,0,0,0.5);"></div>
-      </div>
-      <button id="stop-barcode-scan" class="secondary" style="margin-top:24px; width:100%; max-width:320px;">Cancel Scan</button>
-    </div>
-
-    <section id="edit-section" style="display:none;">
-      <h2>Review & Edit Receipt</h2>
-
-      <div class="form-field">
-        <label for="receipt-location">Location</label>
-        <input type="text" id="receipt-location" placeholder="e.g. Walmart Saint George" />
-      </div>
-
-      <div class="form-field">
-        <label for="receipt-date">Date</label>
-        <input type="date" id="receipt-date" />
-      </div>
-
-      <h3>Items</h3>
-      <div id="items-container"></div>
-
-      <button id="add-item-btn" class="add-btn">+ Add Item</button>
-
-      <div class="edit-actions">
-        <button id="save-receipt" class="primary">Save Receipt</button>
-        <button id="cancel-edit" class="secondary">Cancel</button>
-      </div>
-
-      <div id="deductible-summary" style="margin-top:24px; padding:16px; background:#e6f3ff; border-radius:8px; text-align:right; display:none;">
-        <strong>Total Estimated Deductible: <span id="total-deductible">$0.00</span></strong>
-        <p style="font-size:0.85rem; color:#555; margin-top:8px;">
-          This is an estimate only. Not tax advice. Consult a tax professional.
-        </p>
-      </div>
-    </section>
-  </main>
-
-  <footer id="social-footer">
-    <div class="social-icons">
-      <a href="#" title="Follow on X" class="social-link">𝕏</a>
-      <a href="#" title="Follow on Instagram" class="social-link">📸</a>
-      <a href "#" title="Follow on Facebook" class="social-link">f</a>
-    </div>
-    <small>© 2026 DeductEats • Saint George, Utah</small>
-  </footer>
-
-  <script src="script.js"></script>
-
-  <!-- Cycling tagline script -->
-  <script>
-    const dietTypes = [
-      { text: 'gluten-free', class: 'gluten-free' },
-      { text: 'low-sodium', class: 'low-sodium' },
-      { text: 'keto', class: 'keto' },
-      { text: 'prescribed', class: 'prescribed' }
-    ];
-
-    const cycleText = document.getElementById('cycle-text');
-    let currentIndex = 0;
-
-    if (cycleText) {
-      cycleText.textContent = dietTypes[0].text;
-      cycleText.className = 'cycle-text active ' + dietTypes[0].class;
-
-      setInterval(() => {
-        cycleText.classList.remove('active');
-        
-        setTimeout(() => {
-          currentIndex = (currentIndex + 1) % dietTypes.length;
-          const next = dietTypes[currentIndex];
-          
-          cycleText.textContent = next.text;
-          cycleText.className = 'cycle-text ' + next.class;
-          
-          setTimeout(() => {
-            cycleText.classList.add('active');
-          }, 100);
-        }, 800);
-      }, 5000);
+    if (data.status === 1 && data.product) {
+      const product = data.product;
+      let quantity = product.quantity || product.product_quantity || product.serving_size || '';
+      if (!quantity && product.packaging_tags) {
+        quantity = product.packaging_tags.join(', ');
+      }
+      return {
+        name: product.product_name || product.generic_name || 'Unknown Product',
+        brand: product.brands || '',
+        categoryTags: product.categories_tags || product.categories || [],
+        quantity,
+      };
+    } else {
+      return { name: 'Product Not Found', brand: '', categoryTags: [], quantity: '' };
     }
-  </script>
-</body>
-</html>
+  } catch (err) {
+    console.error('Product lookup error:', err);
+    return { name: 'Error Looking Up Product', brand: '', categoryTags: [], quantity: '' };
+  }
+}
+
+// Improved category suggestion based on keywords in name or tags
+function suggestCategory(tags, itemName = '') {
+  const allText = [
+    ...(tags || []).join(' ').toLowerCase(),
+    (itemName || '').toLowerCase()
+  ].join(' ');
+
+  if (allText.includes('gluten-free') || allText.includes('gluten free')) {
+    console.log('Category matched: Gluten-Free');
+    return 'Gluten-Free';
+  }
+  if (allText.includes('keto') || allText.includes('low-carb') || allText.includes('low carb')) {
+    console.log('Category matched: Keto');
+    return 'Keto';
+  }
+  if (allText.includes('low-sodium') || allText.includes('low sodium') || 
+      allText.includes('reduced sodium') || allText.includes('low salt') || 
+      allText.includes('reduced salt')) {
+    console.log('Category matched: Low-Sodium');
+    return 'Low-Sodium';
+  }
+  if (allText.includes('vegan') || allText.includes('plant-based')) {
+    console.log('Category matched: Vegan');
+    return 'Vegan';
+  }
+
+  console.log('No category match for:', itemName || tags);
+  return 'None';
+}
+
+// Convert quantity string to pounds (lb)
+function convertToLb(quantityStr) {
+  if (!quantityStr) return null;
+  const match = quantityStr.match(/(\d+(\.\d+)?)\s*(g|oz|lb|kg)/i);
+  if (!match) return null;
+
+  const value = parseFloat(match[1]);
+  const unit = match[3].toLowerCase();
+
+  if (unit === 'lb') return value;
+  if (unit === 'oz') return value / 16;
+  if (unit === 'g') return value / 453.592;
+  if (unit === 'kg') return value * 2.20462;
+
+  return null;
+}
+
+// Suggest regular counterpart for common specialty items (robust)
+function suggestRegularItem(itemName) {
+  if (!itemName) return '';
+
+  const lowerName = itemName.toLowerCase();
+
+  if (lowerName.includes('oat') || lowerName.includes('oats')) {
+    console.log('Matched oats for:', itemName);
+    return 'oats';
+  }
+  if (lowerName.includes('flour')) return 'flour';
+  if (lowerName.includes('bread')) return 'bread';
+  if (lowerName.includes('pasta')) return 'pasta';
+  if (lowerName.includes('sugar') || lowerName.includes('sweetener')) return 'sugar';
+  if (lowerName.includes('soup')) return 'soup';
+
+  console.log('No USDA match for:', itemName);
+  return '';
+}
+
+// Suggest regular price from USDA table
+function suggestRegularPrice(regularItem) {
+  if (!regularItem) return null;
+  const lowerItem = regularItem.toLowerCase();
+  for (const [key, price] of Object.entries(usdaRegularPrices)) {
+    if (lowerItem.includes(key)) {
+      console.log('USDA match:', key, 'price:', price);
+      return price;
+    }
+  }
+  return null;
+}
+
+// Get approximate location using browser geolocation + reverse geocode
+async function getCurrentLocation() {
+  if (!navigator.geolocation) {
+    console.warn('Geolocation not supported');
+    return 'Unknown Location';
+  }
+
+  try {
+    const position = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      });
+    });
+
+    const { latitude, longitude } = position.coords;
+
+    const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+    const data = await response.json();
+
+    if (data.city && data.locality) {
+      return `${data.city}, ${data.principalSubdivision || data.countryName}`;
+    } else if (data.city) {
+      return data.city;
+    } else {
+      return 'Unknown Location';
+    }
+  } catch (err) {
+    console.warn('Geolocation error:', err);
+    return 'Unknown Location';
+  }
+}
+
+// Suggest store name based on city + brand hint
+function suggestStoreName(city, brandHint = '') {
+  const lowerCity = city.toLowerCase();
+  const lowerBrand = brandHint.toLowerCase();
+
+  const utahChains = [
+    { name: 'Walmart', keywords: ['walmart', 'supercenter', 'walmart neighborhood market'] },
+    { name: "Smith's", keywords: ['smiths', 'smith\'s', 'kroger'] },
+    { name: 'Maceys', keywords: ['maceys', 'macey\'s'] },
+    { name: 'Harmons', keywords: ['harmons'] },
+    { name: 'Albertsons', keywords: ['albertsons', 'safeway'] },
+  ];
+
+  for (const chain of utahChains) {
+    if (lowerBrand.includes(chain.keywords[0])) {
+      return chain.name;
+    }
+  }
+
+  if (lowerCity.includes('saint george') || lowerCity.includes('st george')) {
+    return 'Walmart';
+  }
+
+  return `${city} Grocery Store`;
+}
+
+// Login from welcome page
+document.getElementById('start-login-btn')?.addEventListener('click', () => {
+  console.log('Login button clicked – setting flag and redirecting');
+  localStorage.setItem('deductEatsLoggedIn', 'true');
+  window.location.href = 'home.html';
+});
+
+// Login state check (only on protected pages)
+function checkLogin() {
+  if (!localStorage.getItem('deductEatsLoggedIn')) {
+    window.location.href = 'welcome.html';
+  }
+}
+
+// Run login check on all pages except welcome
+const currentPath = window.location.pathname.toLowerCase();
+if (!currentPath.endsWith('welcome.html') && !currentPath.endsWith('/')) {
+  checkLogin();
+}
+
+// Logout (shared across all pages)
+document.getElementById('logout-btn')?.addEventListener('click', () => {
+  if (confirm("Log out?")) {
+    localStorage.removeItem('deductEatsLoggedIn');
+    window.location.href = 'welcome.html';
+  }
+});
+
+// Page-specific logic
+const path = window.location.pathname.toLowerCase().replace(/\/$/, '');
+const filename = path.split('/').pop() || '';
+
+const isHomePage = filename === 'home.html' || filename === 'home' || filename === 'index.html' || path === '' || path.includes('home');
+const isHistoryPage = filename === 'history.html' || filename === 'history' || path.includes('history');
+
+if (isHomePage) {
+  let currentItems = [];
+  let currentDate = '';
+  let currentLocation = '';
+
+  // DOM queries
+  const scanBtn = document.getElementById('barcode-scan-btn');
+  const manualBtn = document.getElementById('manual-btn');
+  const addItemBtn = document.getElementById('add-item-btn');
+  const saveReceiptBtn = document.getElementById('save-receipt');
+  const cancelEditBtn = document.getElementById('cancel-edit');
+  const itemsContainer = document.getElementById('items-container');
+  const editSection = document.getElementById('edit-section');
+
+  // Barcode scanning
+  let barcodeScannerActive = false;
+
+  if (scanBtn) {
+    scanBtn.addEventListener('click', async () => {
+      const previewContainer = document.getElementById('barcode-preview-container');
+      previewContainer.style.display = 'block';
+      barcodeScannerActive = true;
+
+      const cityFromGeo = await getCurrentLocation();
+
+      Quagga.init({
+        inputStream: {
+          name: "Live",
+          type: "LiveStream",
+          target: document.querySelector('#barcode-video-container'),
+          constraints: {
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            focusMode: "continuous",
+            aspectRatio: { ideal: 16 / 9 },
+          },
+        },
+        locator: {
+          patchSize: "large",
+          halfSample: true,
+        },
+        numOfWorkers: navigator.hardwareConcurrency || 4,
+        frequency: 5,
+        decoder: {
+          readers: ["upc_reader", "ean_reader", "code_128_reader", "ean_8_reader"],
+        },
+        locate: true,
+      }, function(err) {
+        if (err) {
+          console.error('Quagga init error:', err);
+          alert('Failed to start barcode scanner. Check camera permission.');
+          previewContainer.style.display = 'none';
+          barcodeScannerActive = false;
+          return;
+        }
+        Quagga.start();
+      });
+
+      Quagga.onProcessed((result) => {
+        console.log('Frame processed – detection attempt:', result ? 'yes' : 'no');
+      });
+
+      Quagga.onDetected(async (result) => {
+        const code = result.codeResult.code;
+        Quagga.stop();
+        document.getElementById('barcode-preview-container').style.display = 'none';
+        barcodeScannerActive = false;
+
+        const product = await lookupProductByBarcode(code);
+
+        if (product.name === 'Product Not Found' || product.name === 'Error Looking Up Product') {
+          alert('Barcode scanned: ' + code + '\nProduct not found in database.\nPlease enter name manually.');
+        } else {
+          alert('Barcode scanned: ' + code + '\nFound: ' + product.name + '\nQuantity: ' + (product.quantity || 'Not found'));
+        }
+
+        const regularItem = suggestRegularItem(product.name);
+        const suggestedRegularPrice = suggestRegularPrice(regularItem);
+
+        currentItems = [{
+          name: product.name,
+          price: 0,
+          regularPrice: suggestedRegularPrice || 0,
+          category: suggestCategory(product.categoryTags, product.name),
+          deductible: '',
+          quantity: product.quantity || ''
+        }];
+
+        currentLocation = suggestStoreName(cityFromGeo, product.brand);
+        currentDate = new Date().toISOString().split('T')[0];
+
+        editSection.style.display = 'block';
+        scanBtn.style.display = 'none';
+        manualBtn.style.display = 'none';
+        document.getElementById('receipt-location').value = currentLocation;
+        document.getElementById('receipt-date').value = currentDate;
+        renderItems();
+        updateDeductibles();
+
+        document.querySelector('.price')?.focus();
+      });
+    });
+  }
+
+  if (manualBtn) {
+    manualBtn.addEventListener('click', async () => {
+      currentItems = [];
+      currentDate = new Date().toISOString().split('T')[0];
+      const cityFromGeo = await getCurrentLocation();
+      currentLocation = suggestStoreName(cityFromGeo);
+      editSection.style.display = 'block';
+      scanBtn.style.display = 'none';
+      manualBtn.style.display = 'none';
+      document.getElementById('receipt-location').value = currentLocation;
+      document.getElementById('receipt-date').value = currentDate;
+      renderItems();
+      updateDeductibles();
+    });
+  }
+
+  function renderItems() {
+    itemsContainer.innerHTML = '';
+    currentItems.forEach((item, index) => {
+      const hasRegularPrice = item.regularPrice > 0;
+      const hasQuantity = !!item.quantity;
+      const hasDeductible = item.deductible !== '' && parseFloat(item.deductible) > 0;
+
+      // Suggest category if not already set
+      if (!item.category) {
+        item.category = suggestCategory(item.categoryTags, item.name);
+      }
+
+      const block = document.createElement('div');
+      block.className = 'item-block';
+      block.innerHTML = `
+        <h4>Item ${index + 1}</h4>
+        
+        <div class="form-field">
+          <label>Item Name</label>
+          <input type="text" value="${item.name}" data-index="${index}" class="name" placeholder="e.g. Great Value Quick Oats Gluten Free" />
+        </div>
+        
+        <div class="form-field ${hasQuantity ? '' : 'hidden'}">
+          <label>Net Weight / Quantity</label>
+          <input type="text" value="${item.quantity}" data-index="${index}" class="quantity" readonly />
+        </div>
+        
+        <div class="form-field">
+          <label>Price (total for item)</label>
+          <div class="input-with-dollar">
+            <span class="dollar-sign">$</span>
+            <input type="number" step="0.01" value="${item.price || ''}" data-index="${index}" class="price" placeholder="e.g. 6.99" />
+          </div>
+        </div>
+        
+        <div class="form-field ${hasRegularPrice ? '' : 'hidden'}">
+          <label>USDA Avg Regular Price (per lb)</label>
+          <input type="number" step="0.01" value="${item.regularPrice || ''}" data-index="${index}" class="regular-price" readonly />
+        </div>
+        
+        <div class="form-field">
+          <label>Category</label>
+          <select data-index="${index}" class="category">
+            <option value="None" ${item.category==='None'?'selected':''}>None</option>
+            <option value="Gluten-Free" ${item.category==='Gluten-Free'?'selected':''}>Gluten-Free</option>
+            <option value="Keto" ${item.category==='Keto'?'selected':''}>Keto</option>
+            <option value="Low-Sodium" ${item.category==='Low-Sodium'?'selected':''}>Low-Sodium</option>
+            <option value="Vegan" ${item.category==='Vegan'?'selected':''}>Vegan</option>
+            <option value="Other" ${item.category==='Other'?'selected':''}>Other</option>
+          </select>
+        </div>
+        
+        <div class="form-field ${hasDeductible ? '' : 'hidden'}">
+          <label>Estimated Deductible (based on USDA averages)</label>
+          <input type="number" step="0.01" value="${item.deductible || ''}" data-index="${index}" class="deductible" readonly />
+        </div>
+        
+        <button class="remove-item" data-index="${index}">Remove Item</button>
+      `;
+      itemsContainer.appendChild(block);
+    });
+
+    // Event delegation
+    itemsContainer.addEventListener('input', (e) => {
+      const el = e.target;
+      if (!el.matches('.price')) return;
+      const idx = el.dataset.index;
+      currentItems[idx].price = parseFloat(el.value) || 0;
+      updateDeductibles();
+    });
+
+    itemsContainer.addEventListener('change', (e) => {
+      const el = e.target;
+      if (!el.matches('.name, .category')) return;
+      const idx = el.dataset.index;
+      const key = el.className;
+      currentItems[idx][key] = el.value;
+      updateDeductibles();
+    });
+
+    itemsContainer.addEventListener('click', (e) => {
+      if (!e.target.matches('.remove-item')) return;
+      const idx = e.target.dataset.index;
+      currentItems.splice(idx, 1);
+      renderItems();
+      updateDeductibles();
+    });
+  }
+
+  // Update deductible calculation with quantity support + debug
+  function updateDeductibles() {
+    let totalDeduct = 0;
+    let hasDeductible = false;
+
+    currentItems.forEach((item, index) => {
+      let deduct = 0;
+
+      console.log('Calculating deductible for:', item.name, 'Entered Price:', item.price, 'USDA Price:', item.regularPrice, 'Quantity:', item.quantity);
+
+      if (item.regularPrice > 0) {  // Only calculate if we have a USDA match
+        if (item.quantity) {
+          const qtyInLb = convertToLb(item.quantity);
+          console.log('Converted lb:', qtyInLb);
+
+          if (qtyInLb > 0) {
+            const specialtyTotal = (item.price || 0) * qtyInLb;
+            const regularTotal = item.regularPrice * qtyInLb;
+            deduct = specialtyTotal - regularTotal;
+            console.log('Specialty total:', specialtyTotal, 'Regular total:', regularTotal);
+          } else {
+            deduct = (item.price || 0) - item.regularPrice;
+          }
+        } else {
+          deduct = (item.price || 0) - item.regularPrice;
+        }
+
+        item.deductible = deduct > 0 ? deduct.toFixed(2) : '0.00';
+        totalDeduct += deduct > 0 ? deduct : 0;
+        if (deduct > 0) hasDeductible = true;
+      } else {
+        item.deductible = '0.00';  // No USDA match
+      }
+
+      console.log('Final deductible:', item.deductible);
+
+      const deductInput = document.querySelector(`.deductible[data-index="${index}"]`);
+      if (deductInput) {
+        deductInput.value = item.deductible;
+        deductInput.parentElement.classList.toggle('hidden', item.deductible === '0.00');
+      }
+    });
+
+    const summary = document.getElementById('deductible-summary');
+    if (summary) {
+      summary.style.display = hasDeductible ? 'block' : 'none';
+      const totalSpan = document.getElementById('total-deductible');
+      if (totalSpan) totalSpan.textContent = `$${totalDeduct.toFixed(2)}`;
+    }
+  }
+
+  // Attach add item button
+  if (addItemBtn) {
+    addItemBtn.addEventListener('click', () => {
+      currentItems.push({ name: '', price: 0, regularPrice: 0, category: 'None', deductible: '', quantity: '' });
+      renderItems();
+      updateDeductibles();
+    });
+  }
+
+  // Attach save receipt button
+  if (saveReceiptBtn) {
+    saveReceiptBtn.addEventListener('click', async () => {
+      currentDate = document.getElementById('receipt-date').value;
+      currentLocation = document.getElementById('receipt-location').value;
+
+      if (currentItems.length === 0) return alert('No items to save.');
+
+      const receipt = {
+        date: currentDate || new Date().toISOString().split('T')[0],
+        location: currentLocation || 'Unknown Location',
+        items: [...currentItems],
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        await db.put(STORE_NAME, receipt);
+        alert('Receipt saved!');
+        editSection.style.display = 'none';
+        itemsContainer.innerHTML = '';
+        document.getElementById('barcode-scan-btn').style.display = 'block';
+        document.getElementById('manual-btn').style.display = 'block';
+      } catch (err) {
+        console.error('Save error:', err);
+        alert('Error saving receipt. Check console.');
+      }
+    });
+  }
+
+  // Attach cancel edit button
+  if (cancelEditBtn) {
+    cancelEditBtn.addEventListener('click', () => {
+      editSection.style.display = 'none';
+      itemsContainer.innerHTML = '';
+      document.getElementById('barcode-scan-btn').style.display = 'block';
+      document.getElementById('manual-btn').style.display = 'block';
+    });
+  }
+}
+
+// History page logic
+if (isHistoryPage) {
+  async function loadLogs() {
+    const logList = document.getElementById('log-list');
+    if (!logList) return;
+    logList.innerHTML = '<p>Loading history...</p>';
+
+    try {
+      if (!db) {
+        console.log('DB not ready – waiting...');
+        await initDB();
+      }
+
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const all = await store.getAll();
+      await tx.done;
+
+      console.log('History loaded – receipts:', all.length, all);
+
+      logList.innerHTML = all.length ? '' : '<p>No receipts logged yet.</p>';
+
+      all.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'history-card';
+        card.style.cursor = 'pointer';
+        card.style.padding = '16px';
+        card.style.background = 'white';
+        card.style.borderRadius = '8px';
+        card.style.marginBottom = '12px';
+        card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+        card.innerHTML = `
+          <strong>${r.location || 'Unknown Location'} ${r.date}</strong><br>
+          <small>${r.items.length} item(s) • Saved ${new Date(r.createdAt).toLocaleDateString()}</small>
+        `;
+        card.addEventListener('click', () => showReport(r));
+        logList.appendChild(card);
+      });
+    } catch (err) {
+      console.error('loadLogs error:', err);
+      logList.innerHTML = '<p>Error loading history. Check console.</p>';
+    }
+  }
+
+  function showReport(receipt) {
+    const modal = document.getElementById('report-modal');
+    if (!modal) return;
+    const title = document.getElementById('report-title');
+    const itemsDiv = document.getElementById('report-items');
+    const totalDiv = document.getElementById('report-total');
+
+    title.textContent = `${receipt.location || 'Unknown Location'} - ${receipt.date}`;
+    itemsDiv.innerHTML = '';
+
+    let totalDeduct = 0;
+    receipt.items.forEach(i => {
+      const deduct = parseFloat(i.deductible) || 0;
+      totalDeduct += deduct;
+
+      const itemLine = document.createElement('div');
+      itemLine.className = 'report-item';
+      itemLine.innerHTML = `
+        <span>${i.name || 'Unnamed'} (${i.category || 'None'})</span>
+        <span>$${parseFloat(i.price || 0).toFixed(2)}</span>
+      `;
+      itemsDiv.appendChild(itemLine);
+
+      if (deduct > 0) {
+        const deductLine = document.createElement('div');
+        deductLine.className = 'report-item';
+        deductLine.style.color = '#1976d2';
+        deductLine.innerHTML = `
+          <span>Deductible extra</span>
+          <span>$${deduct.toFixed(2)}</span>
+        `;
+        itemsDiv.appendChild(deductLine);
+      }
+    });
+
+    totalDiv.innerHTML = `Total potential deduction: $${totalDeduct.toFixed(2)}`;
+
+    modal.style.display = 'flex';
+  }
+
+  document.getElementById('close-report')?.addEventListener('click', () => {
+    document.getElementById('report-modal').style.display = 'none';
+  });
+
+  // Load on page load
+  loadLogs();
+
+  // Export CSV
+  document.getElementById('export-csv')?.addEventListener('click', async () => {
+    if (!db) await initDB();
+    const tx = db.transaction(STORE_NAME);
+    const store = tx.objectStore(STORE_NAME);
+    const all = await store.getAll();
+    if (!all.length) return alert('No data to export.');
+
+    let csv = 'Date,Location,Item,Price,Category,Deductible\n';
+    all.forEach(r => {
+      r.items.forEach(i => {
+        csv += `"${r.date}","${r.location}","${i.name.replace(/"/g,'""')}","${i.price}","${i.category}","${i.deductible || ''}"\n`;
+      });
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'deducteats_export.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
