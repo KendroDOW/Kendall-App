@@ -57,25 +57,20 @@ function suggestCategory(tags, itemName = '') {
   ].join(' ');
 
   if (allText.includes('gluten-free') || allText.includes('gluten free')) {
-    console.log('Category matched: Gluten-Free');
     return 'Gluten-Free';
   }
   if (allText.includes('keto') || allText.includes('low-carb') || allText.includes('low carb')) {
-    console.log('Category matched: Keto');
     return 'Keto';
   }
   if (allText.includes('low-sodium') || allText.includes('low sodium') || 
       allText.includes('reduced sodium') || allText.includes('low salt') || 
       allText.includes('reduced salt')) {
-    console.log('Category matched: Low-Sodium');
     return 'Low-Sodium';
   }
   if (allText.includes('vegan') || allText.includes('plant-based')) {
-    console.log('Category matched: Vegan');
     return 'Vegan';
   }
 
-  console.log('No category match for:', itemName || tags);
   return 'None';
 }
 
@@ -103,7 +98,6 @@ function suggestRegularItem(itemName) {
   const lowerName = itemName.toLowerCase();
 
   if (lowerName.includes('oat') || lowerName.includes('oats')) {
-    console.log('Matched oats for:', itemName);
     return 'oats';
   }
   if (lowerName.includes('flour')) return 'flour';
@@ -112,7 +106,6 @@ function suggestRegularItem(itemName) {
   if (lowerName.includes('sugar') || lowerName.includes('sweetener')) return 'sugar';
   if (lowerName.includes('soup')) return 'soup';
 
-  console.log('No USDA match for:', itemName);
   return '';
 }
 
@@ -122,7 +115,6 @@ function suggestRegularPrice(regularItem) {
   const lowerItem = regularItem.toLowerCase();
   for (const [key, price] of Object.entries(usdaRegularPrices)) {
     if (lowerItem.includes(key)) {
-      console.log('USDA match:', key, 'price:', price);
       return price;
     }
   }
@@ -406,7 +398,20 @@ if (isHomePage) {
         const regularItem = suggestRegularItem(el.value);
         currentItems[idx].regularPrice = suggestRegularPrice(regularItem) || 0;
         currentItems[idx].category = suggestCategory([], el.value);
-        renderItems();  // Re-render to update USDA and category fields
+        // Update only the affected fields without full re-render
+        const itemBlock = el.closest('.item-block');
+        if (itemBlock) {
+          const usdaInput = itemBlock.querySelector('.regular-price');
+          if (usdaInput) {
+            usdaInput.value = currentItems[idx].regularPrice;
+            usdaInput.parentElement.classList.toggle('hidden', !currentItems[idx].regularPrice);
+          }
+
+          const categorySelect = itemBlock.querySelector('.category');
+          if (categorySelect) {
+            categorySelect.value = currentItems[idx].category;
+          }
+        }
         updateDeductibles();
       } else if (el.matches('.quantity')) {
         currentItems[idx].quantity = el.value;
