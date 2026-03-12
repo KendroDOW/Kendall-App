@@ -12,7 +12,7 @@ async function initDB() {
 }
 initDB();
 
-// USDA average regular prices (per lb or unit, approximate values)
+// USDA average regular prices (per lb or unit, approximate 2026 values)
 const usdaRegularPrices = {
   'oats': 0.55,
   'flour': 0.50,
@@ -49,33 +49,20 @@ async function lookupProductByBarcode(barcode) {
   }
 }
 
-// Improved category suggestion based on keywords in name or tags
+// Category suggestion (used when rendering)
 function suggestCategory(tags, itemName = '') {
   const allText = [
     ...(tags || []).join(' ').toLowerCase(),
     (itemName || '').toLowerCase()
   ].join(' ');
 
-  if (allText.includes('gluten-free') || allText.includes('gluten free')) {
-    console.log('Category matched: Gluten-Free');
-    return 'Gluten-Free';
-  }
-  if (allText.includes('keto') || allText.includes('low-carb') || allText.includes('low carb')) {
-    console.log('Category matched: Keto');
-    return 'Keto';
-  }
+  if (allText.includes('gluten-free') || allText.includes('gluten free')) return 'Gluten-Free';
+  if (allText.includes('keto') || allText.includes('low-carb') || allText.includes('low carb')) return 'Keto';
   if (allText.includes('low-sodium') || allText.includes('low sodium') || 
       allText.includes('reduced sodium') || allText.includes('low salt') || 
-      allText.includes('reduced salt')) {
-    console.log('Category matched: Low-Sodium');
-    return 'Low-Sodium';
-  }
-  if (allText.includes('vegan') || allText.includes('plant-based')) {
-    console.log('Category matched: Vegan');
-    return 'Vegan';
-  }
+      allText.includes('reduced salt')) return 'Low-Sodium';
+  if (allText.includes('vegan') || allText.includes('plant-based')) return 'Vegan';
 
-  console.log('No category match for:', itemName || tags);
   return 'None';
 }
 
@@ -96,7 +83,7 @@ function convertToLb(quantityStr) {
   return null;
 }
 
-// Suggest regular counterpart for common specialty items (robust)
+// Suggest regular counterpart
 function suggestRegularItem(itemName) {
   if (!itemName) return '';
 
@@ -129,12 +116,9 @@ function suggestRegularPrice(regularItem) {
   return null;
 }
 
-// Get approximate location using browser geolocation + reverse geocode
+// Get approximate location
 async function getCurrentLocation() {
-  if (!navigator.geolocation) {
-    console.warn('Geolocation not supported');
-    return 'Unknown Location';
-  }
+  if (!navigator.geolocation) return 'Unknown Location';
 
   try {
     const position = await new Promise((resolve, reject) => {
@@ -163,7 +147,7 @@ async function getCurrentLocation() {
   }
 }
 
-// Suggest store name based on city + brand hint
+// Suggest store name
 function suggestStoreName(city, brandHint = '') {
   const lowerCity = city.toLowerCase();
   const lowerBrand = brandHint.toLowerCase();
@@ -177,39 +161,35 @@ function suggestStoreName(city, brandHint = '') {
   ];
 
   for (const chain of utahChains) {
-    if (lowerBrand.includes(chain.keywords[0])) {
-      return chain.name;
-    }
+    if (lowerBrand.includes(chain.keywords[0])) return chain.name;
   }
 
-  if (lowerCity.includes('saint george') || lowerCity.includes('st george')) {
-    return 'Walmart';
-  }
+  if (lowerCity.includes('saint george') || lowerCity.includes('st george')) return 'Walmart';
 
   return `${city} Grocery Store`;
 }
 
 // Login from welcome page
 document.getElementById('start-login-btn')?.addEventListener('click', () => {
-  console.log('Login button clicked – setting flag and redirecting');
+  console.log('Login button clicked');
   localStorage.setItem('deductEatsLoggedIn', 'true');
   window.location.href = 'home.html';
 });
 
-// Login state check (only on protected pages)
+// Login state check
 function checkLogin() {
   if (!localStorage.getItem('deductEatsLoggedIn')) {
     window.location.href = 'welcome.html';
   }
 }
 
-// Run login check on all pages except welcome
+// Run login check on protected pages
 const currentPath = window.location.pathname.toLowerCase();
 if (!currentPath.endsWith('welcome.html') && !currentPath.endsWith('/')) {
   checkLogin();
 }
 
-// Logout (shared across all pages)
+// Logout
 document.getElementById('logout-btn')?.addEventListener('click', () => {
   if (confirm("Log out?")) {
     localStorage.removeItem('deductEatsLoggedIn');
@@ -217,19 +197,18 @@ document.getElementById('logout-btn')?.addEventListener('click', () => {
   }
 });
 
-// Page-specific logic
+// Page detection
 const path = window.location.pathname.toLowerCase().replace(/\/$/, '');
 const filename = path.split('/').pop() || '';
 
-const isHomePage = filename === 'home.html' || filename === 'home' || filename === 'index.html' || path === '' || path.includes('home');
-const isHistoryPage = filename === 'history.html' || filename === 'history' || path.includes('history');
+const isHomePage = filename === 'home.html' || filename === 'index.html' || path === '' || path.includes('home');
+const isHistoryPage = filename === 'history.html' || path.includes('history');
 
 if (isHomePage) {
   let currentItems = [];
   let currentDate = '';
   let currentLocation = '';
 
-  // DOM queries
   const scanBtn = document.getElementById('barcode-scan-btn');
   const manualBtn = document.getElementById('manual-btn');
   const addItemBtn = document.getElementById('add-item-btn');
@@ -238,7 +217,6 @@ if (isHomePage) {
   const itemsContainer = document.getElementById('items-container');
   const editSection = document.getElementById('edit-section');
 
-  // Barcode scanning
   let barcodeScannerActive = false;
 
   if (scanBtn) {
@@ -296,9 +274,9 @@ if (isHomePage) {
         const product = await lookupProductByBarcode(code);
 
         if (product.name === 'Product Not Found' || product.name === 'Error Looking Up Product') {
-          alert('Barcode scanned: ' + code + '\nProduct not found in database.\nPlease enter name manually.');
+          alert('Barcode scanned: ' + code + '\nProduct not found.\nEnter name manually.');
         } else {
-          alert('Barcode scanned: ' + code + '\nFound: ' + product.name + '\nQuantity: ' + (product.quantity || 'Not found'));
+          alert('Found: ' + product.name + '\nQuantity: ' + (product.quantity || 'Not found'));
         }
 
         const regularItem = suggestRegularItem(product.name);
@@ -352,11 +330,6 @@ if (isHomePage) {
       const hasQuantity = !!item.quantity;
       const hasDeductible = item.deductible !== '' && parseFloat(item.deductible) > 0;
 
-      // Suggest category if not already set
-      if (!item.category) {
-        item.category = suggestCategory(item.categoryTags, item.name);
-      }
-
       const block = document.createElement('div');
       block.className = 'item-block';
       block.innerHTML = `
@@ -369,7 +342,7 @@ if (isHomePage) {
         
         <div class="form-field ${hasQuantity ? '' : 'hidden'}">
           <label>Net Weight / Quantity</label>
-          <input type="text" value="${item.quantity}" data-index="${index}" class="quantity" readonly />
+          <input type="text" value="${item.quantity}" data-index="${index}" class="quantity" />
         </div>
         
         <div class="form-field">
@@ -392,7 +365,6 @@ if (isHomePage) {
             <option value="Gluten-Free" ${item.category==='Gluten-Free'?'selected':''}>Gluten-Free</option>
             <option value="Keto" ${item.category==='Keto'?'selected':''}>Keto</option>
             <option value="Low-Sodium" ${item.category==='Low-Sodium'?'selected':''}>Low-Sodium</option>
-            <option value="Vegan" ${item.category==='Vegan'?'selected':''}>Vegan</option>
             <option value="Other" ${item.category==='Other'?'selected':''}>Other</option>
           </select>
         </div>
@@ -407,34 +379,41 @@ if (isHomePage) {
       itemsContainer.appendChild(block);
     });
 
-    // Event delegation
+    // Live updates
     itemsContainer.addEventListener('input', (e) => {
       const el = e.target;
-      if (!el.matches('.price')) return;
-      const idx = el.dataset.index;
-      currentItems[idx].price = parseFloat(el.value) || 0;
-      updateDeductibles();
+      if (el.matches('.price')) {
+        const idx = el.dataset.index;
+        currentItems[idx].price = parseFloat(el.value) || 0;
+        updateDeductibles();
+      } else if (el.matches('.quantity')) {
+        const idx = el.dataset.index;
+        currentItems[idx].quantity = el.value;
+        updateDeductibles();
+      }
     });
 
     itemsContainer.addEventListener('change', (e) => {
       const el = e.target;
-      if (!el.matches('.name, .category')) return;
-      const idx = el.dataset.index;
-      const key = el.className;
-      currentItems[idx][key] = el.value;
-      updateDeductibles();
+      if (el.matches('.name, .category')) {
+        const idx = el.dataset.index;
+        const key = el.className;
+        currentItems[idx][key] = el.value;
+        updateDeductibles();
+      }
     });
 
     itemsContainer.addEventListener('click', (e) => {
-      if (!e.target.matches('.remove-item')) return;
-      const idx = e.target.dataset.index;
-      currentItems.splice(idx, 1);
-      renderItems();
-      updateDeductibles();
+      if (e.target.matches('.remove-item')) {
+        const idx = e.target.dataset.index;
+        currentItems.splice(idx, 1);
+        renderItems();
+        updateDeductibles();
+      }
     });
   }
 
-  // Update deductible calculation with quantity support + debug
+  // Deductible calculation
   function updateDeductibles() {
     let totalDeduct = 0;
     let hasDeductible = false;
@@ -442,33 +421,39 @@ if (isHomePage) {
     currentItems.forEach((item, index) => {
       let deduct = 0;
 
-      console.log('Calculating deductible for:', item.name, 'Entered Price:', item.price, 'USDA Price:', item.regularPrice, 'Quantity:', item.quantity);
+      console.log(`Item ${index + 1}: ${item.name}`);
+      console.log(`  Entered price: $${item.price || 0}`);
+      console.log(`  USDA regular price: $${item.regularPrice || 0}/lb`);
+      console.log(`  Quantity: ${item.quantity || '(none)'}`);
 
-      if (item.regularPrice > 0) {  // Only calculate if we have a USDA match
+      if (item.regularPrice > 0) {
         if (item.quantity) {
           const qtyInLb = convertToLb(item.quantity);
-          console.log('Converted lb:', qtyInLb);
+          console.log(`  Converted to lb: ${qtyInLb || '(failed)'}`);
 
           if (qtyInLb > 0) {
             const specialtyTotal = (item.price || 0) * qtyInLb;
             const regularTotal = item.regularPrice * qtyInLb;
             deduct = specialtyTotal - regularTotal;
-            console.log('Specialty total:', specialtyTotal, 'Regular total:', regularTotal);
+            console.log(`  Specialty total: $${specialtyTotal.toFixed(2)}`);
+            console.log(`  Regular total: $${regularTotal.toFixed(2)}`);
           } else {
             deduct = (item.price || 0) - item.regularPrice;
+            console.log('  Quantity conversion failed → fallback per-unit');
           }
         } else {
           deduct = (item.price || 0) - item.regularPrice;
+          console.log('  No quantity → treating price as per lb');
         }
 
         item.deductible = deduct > 0 ? deduct.toFixed(2) : '0.00';
         totalDeduct += deduct > 0 ? deduct : 0;
         if (deduct > 0) hasDeductible = true;
       } else {
-        item.deductible = '0.00';  // No USDA match
+        item.deductible = '0.00';
       }
 
-      console.log('Final deductible:', item.deductible);
+      console.log(`  Deductible: $${item.deductible}`);
 
       const deductInput = document.querySelector(`.deductible[data-index="${index}"]`);
       if (deductInput) {
@@ -485,7 +470,7 @@ if (isHomePage) {
     }
   }
 
-  // Attach add item button
+  // Add item button
   if (addItemBtn) {
     addItemBtn.addEventListener('click', () => {
       currentItems.push({ name: '', price: 0, regularPrice: 0, category: 'None', deductible: '', quantity: '' });
@@ -494,7 +479,7 @@ if (isHomePage) {
     });
   }
 
-  // Attach save receipt button
+  // Save receipt
   if (saveReceiptBtn) {
     saveReceiptBtn.addEventListener('click', async () => {
       currentDate = document.getElementById('receipt-date').value;
@@ -523,7 +508,7 @@ if (isHomePage) {
     });
   }
 
-  // Attach cancel edit button
+  // Cancel edit
   if (cancelEditBtn) {
     cancelEditBtn.addEventListener('click', () => {
       editSection.style.display = 'none';
@@ -542,31 +527,20 @@ if (isHistoryPage) {
     logList.innerHTML = '<p>Loading history...</p>';
 
     try {
-      if (!db) {
-        console.log('DB not ready – waiting...');
-        await initDB();
-      }
+      if (!db) await initDB();
 
       const tx = db.transaction(STORE_NAME, 'readonly');
       const store = tx.objectStore(STORE_NAME);
       const all = await store.getAll();
       await tx.done;
 
-      console.log('History loaded – receipts:', all.length, all);
-
       logList.innerHTML = all.length ? '' : '<p>No receipts logged yet.</p>';
 
       all.forEach(r => {
         const card = document.createElement('div');
         card.className = 'history-card';
-        card.style.cursor = 'pointer';
-        card.style.padding = '16px';
-        card.style.background = 'white';
-        card.style.borderRadius = '8px';
-        card.style.marginBottom = '12px';
-        card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
         card.innerHTML = `
-          <strong>${r.location || 'Unknown Location'} ${r.date}</strong><br>
+          <strong>${r.location || 'Unknown'} ${r.date}</strong><br>
           <small>${r.items.length} item(s) • Saved ${new Date(r.createdAt).toLocaleDateString()}</small>
         `;
         card.addEventListener('click', () => showReport(r));
@@ -574,18 +548,19 @@ if (isHistoryPage) {
       });
     } catch (err) {
       console.error('loadLogs error:', err);
-      logList.innerHTML = '<p>Error loading history. Check console.</p>';
+      logList.innerHTML = '<p>Error loading history.</p>';
     }
   }
 
   function showReport(receipt) {
     const modal = document.getElementById('report-modal');
     if (!modal) return;
+
     const title = document.getElementById('report-title');
     const itemsDiv = document.getElementById('report-items');
     const totalDiv = document.getElementById('report-total');
 
-    title.textContent = `${receipt.location || 'Unknown Location'} - ${receipt.date}`;
+    title.textContent = `${receipt.location || 'Unknown'} - ${receipt.date}`;
     itemsDiv.innerHTML = '';
 
     let totalDeduct = 0;
@@ -593,23 +568,20 @@ if (isHistoryPage) {
       const deduct = parseFloat(i.deductible) || 0;
       totalDeduct += deduct;
 
-      const itemLine = document.createElement('div');
-      itemLine.className = 'report-item';
-      itemLine.innerHTML = `
-        <span>${i.name || 'Unnamed'} (${i.category || 'None'})</span>
-        <span>$${parseFloat(i.price || 0).toFixed(2)}</span>
+      itemsDiv.innerHTML += `
+        <div class="report-item">
+          <span>${i.name || 'Unnamed'} (${i.category || 'None'})</span>
+          <span>$${parseFloat(i.price || 0).toFixed(2)}</span>
+        </div>
       `;
-      itemsDiv.appendChild(itemLine);
 
       if (deduct > 0) {
-        const deductLine = document.createElement('div');
-        deductLine.className = 'report-item';
-        deductLine.style.color = '#1976d2';
-        deductLine.innerHTML = `
-          <span>Deductible extra</span>
-          <span>$${deduct.toFixed(2)}</span>
+        itemsDiv.innerHTML += `
+          <div class="report-item" style="color:#1976d2;">
+            <span>Deductible extra</span>
+            <span>$${deduct.toFixed(2)}</span>
+          </div>
         `;
-        itemsDiv.appendChild(deductLine);
       }
     });
 
@@ -622,10 +594,8 @@ if (isHistoryPage) {
     document.getElementById('report-modal').style.display = 'none';
   });
 
-  // Load on page load
   loadLogs();
 
-  // Export CSV
   document.getElementById('export-csv')?.addEventListener('click', async () => {
     if (!db) await initDB();
     const tx = db.transaction(STORE_NAME);
