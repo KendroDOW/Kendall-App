@@ -12,7 +12,7 @@ async function initDB() {
 }
 initDB();
 
-// USDA average regular prices (per lb or unit, approximate values)
+// USDA average regular prices (per lb or unit, approximate 2026 values)
 const usdaRegularPrices = {
   'oats': 0.55,
   'flour': 0.50,
@@ -20,10 +20,9 @@ const usdaRegularPrices = {
   'pasta': 1.20,
   'sugar': 0.80,
   'soup': 1.50,
-  // Add more common staples as needed
 };
 
-// Lookup product by barcode using Open Food Facts API
+// Lookup product by barcode using Open Food Facts API – extracts quantity
 async function lookupProductByBarcode(barcode) {
   try {
     const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
@@ -50,12 +49,36 @@ async function lookupProductByBarcode(barcode) {
   }
 }
 
-// Simple category suggestion from tags
-function suggestCategory(tags) {
-  const tagString = (tags || []).join(' ').toLowerCase();
-  if (tagString.includes('gluten-free')) return 'Gluten-Free';
-  if (tagString.includes('keto') || tagString.includes('low-carb')) return 'Keto';
-  if (tagString.includes('low-sodium') || tagString.includes('reduced sodium')) return 'Low-Sodium';
+// Improved category suggestion based on keywords in name or tags
+function suggestCategory(tags, itemName = '') {
+  // Combine tags and item name for broader matching
+  const allText = [
+    ...(tags || []).join(' ').toLowerCase(),
+    (itemName || '').toLowerCase()
+  ].join(' ');
+
+  // Keyword checks (case-insensitive, partial matches)
+  if (allText.includes('gluten-free') || allText.includes('gluten free')) {
+    console.log('Category matched: Gluten-Free');
+    return 'Gluten-Free';
+  }
+  if (allText.includes('keto') || allText.includes('low-carb') || allText.includes('low carb')) {
+    console.log('Category matched: Keto');
+    return 'Keto';
+  }
+  if (allText.includes('low-sodium') || allText.includes('low sodium') || 
+      allText.includes('reduced sodium') || allText.includes('low salt') || 
+      allText.includes('reduced salt')) {
+    console.log('Category matched: Low-Sodium');
+    return 'Low-Sodium';
+  }
+  // Add more categories as needed
+  if (allText.includes('vegan') || allText.includes('plant-based')) {
+    console.log('Category matched: Vegan');
+    return 'Vegan';
+  }
+
+  console.log('No category match for:', itemName || tags);
   return 'None';
 }
 
@@ -290,7 +313,7 @@ if (isHomePage) {
           name: product.name,
           price: 0,
           regularPrice: suggestedRegularPrice || 0,
-          category: suggestCategory(product.categoryTags),
+          category: suggestCategory(product.categoryTags, product.name),
           deductible: '',
           quantity: product.quantity || ''
         }];
@@ -333,6 +356,12 @@ if (isHomePage) {
       const hasRegularPrice = item.regularPrice > 0;
       const hasQuantity = !!item.quantity;
       const hasDeductible = item.deductible !== '' && parseFloat(item.deductible) > 0;
+
+      // Suggest category if not already set
+      if (!item.category) {
+        item.category = suggestCategory(item.categoryTags, item.name);
+      }
+
       const block = document.createElement('div');
       block.className = 'item-block';
       block.innerHTML = `
@@ -364,11 +393,12 @@ if (isHomePage) {
         <div class="form-field">
           <label>Category</label>
           <select data-index="${index}" class="category">
-            <option ${item.category==='None'?'selected':''}>None</option>
-            <option ${item.category==='Gluten-Free'?'selected':''}>Gluten-Free</option>
-            <option ${item.category==='Keto'?'selected':''}>Keto</option>
-            <option ${item.category==='Low-Sodium'?'selected':''}>Low-Sodium</option>
-            <option ${item.category==='Other'?'selected':''}>Other</option>
+            <option value="None" ${item.category==='None'?'selected':''}>None</option>
+            <option value="Gluten-Free" ${item.category==='Gluten-Free'?'selected':''}>Gluten-Free</option>
+            <option value="Keto" ${item.category==='Keto'?'selected':''}>Keto</option>
+            <option value="Low-Sodium" ${item.category==='Low-Sodium'?'selected':''}>Low-Sodium</option>
+            <option value="Vegan" ${item.category==='Vegan'?'selected':''}>Vegan</option>
+            <option value="Other" ${item.category==='Other'?'selected':''}>Other</option>
           </select>
         </div>
         
@@ -382,7 +412,7 @@ if (isHomePage) {
       itemsContainer.appendChild(block);
     });
 
-    // Event delegation - live update on input
+    // Event delegation - live update on input/change
     itemsContainer.addEventListener('input', (e) => {
       const el = e.target;
       if (!el.matches('.price')) return;
