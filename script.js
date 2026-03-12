@@ -12,7 +12,7 @@ async function initDB() {
 }
 initDB();
 
-// USDA average regular prices (per lb or unit, approximate 2026 values)
+// USDA average regular prices (per lb or unit, approximate values)
 const usdaRegularPrices = {
   'oats': 0.55,
   'flour': 0.50,
@@ -20,9 +20,10 @@ const usdaRegularPrices = {
   'pasta': 1.20,
   'sugar': 0.80,
   'soup': 1.50,
+  // Add more common staples as needed
 };
 
-// Lookup product by barcode using Open Food Facts API – extracts quantity
+// Lookup product by barcode using Open Food Facts API
 async function lookupProductByBarcode(barcode) {
   try {
     const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
@@ -75,15 +76,25 @@ function convertToLb(quantityStr) {
   return null;
 }
 
-// Suggest regular counterpart for common specialty items
+// Suggest regular counterpart for common specialty items (more robust)
 function suggestRegularItem(itemName) {
+  if (!itemName) return '';
+
   const lowerName = itemName.toLowerCase();
-  if (lowerName.includes('oat')) return 'oats';
+
+  // Broader oat matching (most common issue)
+  if (lowerName.includes('oat') || lowerName.includes('oats')) {
+    console.log('Matched oats for:', itemName);
+    return 'oats';
+  }
+
   if (lowerName.includes('flour')) return 'flour';
   if (lowerName.includes('bread')) return 'bread';
   if (lowerName.includes('pasta')) return 'pasta';
-  if (lowerName.includes('sweetener') || lowerName.includes('sugar')) return 'sugar';
+  if (lowerName.includes('sugar') || lowerName.includes('sweetener')) return 'sugar';
   if (lowerName.includes('soup')) return 'soup';
+
+  console.log('No USDA match for:', itemName);
   return '';
 }
 
@@ -92,7 +103,10 @@ function suggestRegularPrice(regularItem) {
   if (!regularItem) return null;
   const lowerItem = regularItem.toLowerCase();
   for (const [key, price] of Object.entries(usdaRegularPrices)) {
-    if (lowerItem.includes(key)) return price;
+    if (lowerItem.includes(key)) {
+      console.log('USDA match:', key, 'price:', price);
+      return price;
+    }
   }
   return null;
 }
@@ -157,7 +171,7 @@ function suggestStoreName(city, brandHint = '') {
   return `${city} Grocery Store`;
 }
 
-// Login from welcome page (runs on index.html)
+// Login from welcome page (runs on index.html or welcome.html)
 document.getElementById('start-login-btn')?.addEventListener('click', () => {
   console.log('Login button clicked – setting flag and redirecting');
   localStorage.setItem('deductEatsLoggedIn', 'true');
@@ -167,13 +181,13 @@ document.getElementById('start-login-btn')?.addEventListener('click', () => {
 // Login state check (only on protected pages)
 function checkLogin() {
   if (!localStorage.getItem('deductEatsLoggedIn')) {
-    window.location.href = 'index.html';
+    window.location.href = 'welcome.html'; // or index.html if that's your welcome page
   }
 }
 
-// Run login check on all pages except index.html
+// Run login check on all pages except welcome
 const currentPath = window.location.pathname.toLowerCase();
-if (!currentPath.endsWith('index.html') && !currentPath.endsWith('/')) {
+if (!currentPath.endsWith('welcome.html') && !currentPath.endsWith('index.html') && !currentPath.endsWith('/')) {
   checkLogin();
 }
 
@@ -181,7 +195,7 @@ if (!currentPath.endsWith('index.html') && !currentPath.endsWith('/')) {
 document.getElementById('logout-btn')?.addEventListener('click', () => {
   if (confirm("Log out?")) {
     localStorage.removeItem('deductEatsLoggedIn');
-    window.location.href = 'index.html';
+    window.location.href = 'welcome.html';
   }
 });
 
@@ -189,7 +203,7 @@ document.getElementById('logout-btn')?.addEventListener('click', () => {
 const path = window.location.pathname.toLowerCase().replace(/\/$/, '');
 const filename = path.split('/').pop() || '';
 
-const isHomePage = filename === 'home.html' || filename === 'home' || path === '' || path.includes('home');
+const isHomePage = filename === 'home.html' || filename === 'home' || filename === 'index.html' || path === '' || path.includes('home');
 const isHistoryPage = filename === 'history.html' || filename === 'history' || path.includes('history');
 
 if (isHomePage) {
@@ -395,7 +409,7 @@ if (isHomePage) {
     });
   }
 
-  // Update deductible calculation with quantity support
+  // Update deductible calculation with quantity support + debug
   function updateDeductibles() {
     let totalDeduct = 0;
     let hasDeductible = false;
@@ -403,8 +417,11 @@ if (isHomePage) {
     currentItems.forEach((item, index) => {
       let deduct = 0;
 
+      console.log('Calculating deductible for:', item.name, 'Price:', item.price, 'Regular:', item.regularPrice, 'Qty:', item.quantity);
+
       if (item.quantity) {
         const qtyInLb = convertToLb(item.quantity);
+        console.log('Qty in lb:', qtyInLb);
         if (qtyInLb) {
           const specialtyTotal = (item.price || 0) * qtyInLb;
           const regularTotal = (item.regularPrice || 0) * qtyInLb;
@@ -419,6 +436,8 @@ if (isHomePage) {
       item.deductible = deduct > 0 ? deduct.toFixed(2) : '';
       totalDeduct += deduct > 0 ? deduct : 0;
       if (deduct > 0) hasDeductible = true;
+
+      console.log('Deductible:', item.deductible);
 
       const deductInput = document.querySelector(`.deductible[data-index="${index}"]`);
       if (deductInput) {
