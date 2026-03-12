@@ -56,12 +56,20 @@ function suggestCategory(tags, itemName = '') {
     (itemName || '').toLowerCase()
   ].join(' ');
 
-  if (allText.includes('gluten-free') || allText.includes('gluten free')) return 'Gluten-Free';
-  if (allText.includes('keto') || allText.includes('low-carb') || allText.includes('low carb')) return 'Keto';
+  if (allText.includes('gluten-free') || allText.includes('gluten free')) {
+    return 'Gluten-Free';
+  }
+  if (allText.includes('keto') || allText.includes('low-carb') || allText.includes('low carb')) {
+    return 'Keto';
+  }
   if (allText.includes('low-sodium') || allText.includes('low sodium') || 
       allText.includes('reduced sodium') || allText.includes('low salt') || 
-      allText.includes('reduced salt')) return 'Low-Sodium';
-  if (allText.includes('vegan') || allText.includes('plant-based')) return 'Vegan';
+      allText.includes('reduced salt')) {
+    return 'Low-Sodium';
+  }
+  if (allText.includes('vegan') || allText.includes('plant-based')) {
+    return 'Vegan';
+  }
 
   return 'None';
 }
@@ -90,7 +98,6 @@ function suggestRegularItem(itemName) {
   const lowerName = itemName.toLowerCase();
 
   if (lowerName.includes('oat') || lowerName.includes('oats')) {
-    console.log('Matched oats for:', itemName);
     return 'oats';
   }
   if (lowerName.includes('flour')) return 'flour';
@@ -99,7 +106,6 @@ function suggestRegularItem(itemName) {
   if (lowerName.includes('sugar') || lowerName.includes('sweetener')) return 'sugar';
   if (lowerName.includes('soup')) return 'soup';
 
-  console.log('No USDA match for:', itemName);
   return '';
 }
 
@@ -109,7 +115,6 @@ function suggestRegularPrice(regularItem) {
   const lowerItem = regularItem.toLowerCase();
   for (const [key, price] of Object.entries(usdaRegularPrices)) {
     if (lowerItem.includes(key)) {
-      console.log('USDA match:', key, 'price:', price);
       return price;
     }
   }
@@ -379,7 +384,7 @@ if (isHomePage) {
       itemsContainer.appendChild(block);
     });
 
-    // Live updates
+    // Live updates on input
     itemsContainer.addEventListener('input', (e) => {
       const el = e.target;
       const idx = el.dataset.index;
@@ -389,12 +394,11 @@ if (isHomePage) {
         updateDeductibles();
       } else if (el.matches('.name')) {
         currentItems[idx].name = el.value;
-        // Auto-update regular price when name changes
+        // Auto-update regular price and category when name changes
         const regularItem = suggestRegularItem(el.value);
         currentItems[idx].regularPrice = suggestRegularPrice(regularItem) || 0;
-        // Auto-update category
         currentItems[idx].category = suggestCategory([], el.value);
-        renderItems();  // Re-render to update USDA and category fields
+        renderItems();  // Re-render to show updated USDA and category
       } else if (el.matches('.quantity')) {
         currentItems[idx].quantity = el.value;
         updateDeductibles();
@@ -428,29 +432,18 @@ if (isHomePage) {
     currentItems.forEach((item, index) => {
       let deduct = 0;
 
-      console.log(`Item ${index + 1}: ${item.name}`);
-      console.log(`  Entered total price: $${item.price || 0}`);
-      console.log(`  USDA regular price: $${item.regularPrice || 0}/lb`);
-      console.log(`  Quantity: ${item.quantity || '(none)'}`);
-
       if (item.regularPrice > 0) {
         if (item.quantity) {
           const qtyInLb = convertToLb(item.quantity);
-          console.log(`  Converted to lb: ${qtyInLb || '(failed)'}`);
-
           if (qtyInLb > 0) {
             const specialtyTotal = (item.price || 0) * qtyInLb;
             const regularTotal = item.regularPrice * qtyInLb;
             deduct = specialtyTotal - regularTotal;
-            console.log(`  Specialty total: $${specialtyTotal.toFixed(2)}`);
-            console.log(`  Regular total: $${regularTotal.toFixed(2)}`);
           } else {
             deduct = (item.price || 0) - item.regularPrice;
-            console.log('  Quantity conversion failed → fallback per-unit');
           }
         } else {
           deduct = (item.price || 0) - item.regularPrice;
-          console.log('  No quantity → treating price as per lb');
         }
 
         item.deductible = deduct > 0 ? deduct.toFixed(2) : '0.00';
@@ -459,8 +452,6 @@ if (isHomePage) {
       } else {
         item.deductible = '0.00';
       }
-
-      console.log(`  Deductible: $${item.deductible}`);
 
       const deductInput = document.querySelector(`.deductible[data-index="${index}"]`);
       if (deductInput) {
