@@ -34,14 +34,6 @@
 
   <main id="main-content">
     <div class="hero">
-      <div class="tagline">
-        Money back for your 
-        <span class="cycle-container">
-          <span id="cycle-text" class="cycle-text gluten-free">gluten-free</span>
-        </span> 
-        diet
-      </div>
-
       <!-- Slideshow -->
       <div class="slideshow-container">
         <div class="slideshow-wrapper">
@@ -130,40 +122,6 @@
   </footer>
 
   <script src="script.js"></script>
-
-  <!-- Cycling tagline script -->
-  <script>
-    const dietTypes = [
-      { text: 'gluten-free', class: 'gluten-free' },
-      { text: 'low-sodium', class: 'low-sodium' },
-      { text: 'keto', class: 'keto' },
-      { text: 'prescribed', class: 'prescribed' }
-    ];
-
-    const cycleText = document.getElementById('cycle-text');
-    let currentIndex = 0;
-
-    if (cycleText) {
-      cycleText.textContent = dietTypes[0].text;
-      cycleText.className = 'cycle-text active ' + dietTypes[0].class;
-
-      setInterval(() => {
-        cycleText.classList.remove('active');
-        
-        setTimeout(() => {
-          currentIndex = (currentIndex + 1) % dietTypes.length;
-          const next = dietTypes[currentIndex];
-          
-          cycleText.textContent = next.text;
-          cycleText.className = 'cycle-text ' + next.class;
-          
-          setTimeout(() => {
-            cycleText.classList.add('active');
-          }, 100);
-        }, 800);
-      }, 5000);
-    }
-  </script>
 
   <!-- Hamburger menu toggle -->
   <script>
