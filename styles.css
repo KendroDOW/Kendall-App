@@ -14,7 +14,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Navigation - centered, hamburger on phone */
+/* Navigation - centered links, Log Out on right */
 #top-nav {
   display: flex;
   justify-content: space-between;
@@ -29,13 +29,12 @@ body {
 
 .nav-logo {
   font-size: 1.9rem;
-  font-weight: 900; /* Extra bold for blocky feel */
-  letter-spacing: -1px; /* Condensed/blocky */
-  color: #10b981; /* Your previous green shade */
-  text-shadow: 0 1px 3px rgba(16,185,129,0.4);
+  font-weight: 900;
+  letter-spacing: -1px;
   background: linear-gradient(to bottom, #10b981, #059669);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-shadow: 0 1px 3px rgba(16,185,129,0.4);
   transition: transform 0.2s;
 }
 
@@ -47,6 +46,8 @@ body {
   display: flex;
   gap: 20px;
   align-items: center;
+  justify-content: center;
+  flex: 1;
 }
 
 .nav-btn {
@@ -125,12 +126,6 @@ body {
     text-align: center;
     flex: none;
   }
-}
-
-/* Header - no redundant h1 */
-header {
-  padding: 0;
-  border-bottom: none;
 }
 
 /* Hero with cycling tagline */
@@ -244,7 +239,7 @@ header {
   width: 300%;
   height: 100%;
   display: flex;
-  transition: left 0.8s ease-in-out; /* Smooth left-to-right */
+  transition: left 0.8s ease-in-out;
 }
 
 .slide {
