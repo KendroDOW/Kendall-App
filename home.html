@@ -9,7 +9,7 @@
   <!-- Google Fonts (Inter) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   
   <!-- idb library -->
   <script src="https://unpkg.com/idb@7.1.1/build/umd.js"></script>
@@ -31,8 +31,6 @@
     </div>
     <button class="hamburger" id="hamburger-btn">≡</button>
   </nav>
-
-  <!-- No separate header h1 anymore - logo in nav is enough -->
 
   <main id="main-content">
     <div class="hero">
@@ -78,7 +76,48 @@
       </div>
     </div>
 
-    <!-- ... rest of your barcode preview, edit section, etc. remains unchanged ... -->
+    <!-- Barcode scanning preview area -->
+    <div id="barcode-preview-container" style="display:none; margin-top:24px; text-align:center;">
+      <h3>Scan Barcode</h3>
+      <p style="color:#555; margin-bottom:16px;">Align the barcode inside the red box. Zoom in if needed.</p>
+      <div id="barcode-video-container" style="position:relative; width:100%; max-width:480px; margin:0 auto; background:#000; border-radius:12px; overflow:hidden;">
+        <video id="barcode-video" autoplay playsinline style="width:100%; height:auto;"></video>
+        <div id="barcode-guide" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:80%; height:30%; border:4px dashed red; border-radius:12px; pointer-events:none; box-shadow:0 0 0 9999px rgba(0,0,0,0.5);"></div>
+      </div>
+      <button id="stop-barcode-scan" class="secondary" style="margin-top:24px; width:100%; max-width:320px;">Cancel Scan</button>
+    </div>
+
+    <!-- Manual Edit Form -->
+    <section id="edit-section" style="display:none;">
+      <h2>Review & Edit Receipt</h2>
+
+      <div class="form-field">
+        <label for="receipt-location">Location</label>
+        <input type="text" id="receipt-location" placeholder="e.g. Walmart Saint George" />
+      </div>
+
+      <div class="form-field">
+        <label for="receipt-date">Date</label>
+        <input type="date" id="receipt-date" />
+      </div>
+
+      <h3>Items</h3>
+      <div id="items-container"></div>
+
+      <button id="add-item-btn" class="add-btn">+ Add Item</button>
+
+      <div class="edit-actions">
+        <button id="save-receipt" class="primary">Save Receipt</button>
+        <button id="cancel-edit" class="secondary">Cancel</button>
+      </div>
+
+      <div id="deductible-summary" style="margin-top:24px; padding:16px; background:#e6f3ff; border-radius:8px; text-align:right; display:none;">
+        <strong>Total Estimated Deductible: <span id="total-deductible">$0.00</span></strong>
+        <p style="font-size:0.85rem; color:#555; margin-top:8px;">
+          This is an estimate only. Not tax advice. Consult a tax professional.
+        </p>
+      </div>
+    </section>
   </main>
 
   <footer id="social-footer">
@@ -92,7 +131,7 @@
 
   <script src="script.js"></script>
 
-  <!-- Your existing cycling tagline script remains unchanged -->
+  <!-- Cycling tagline script -->
   <script>
     const dietTypes = [
       { text: 'gluten-free', class: 'gluten-free' },
@@ -138,7 +177,7 @@
     }
   </script>
 
-  <!-- Slideshow script - one slide at a time, smooth left-to-right transition -->
+  <!-- Slideshow script -->
   <script>
     const wrapper = document.querySelector('.slideshow-wrapper');
     const slides = document.querySelectorAll('.slide');
