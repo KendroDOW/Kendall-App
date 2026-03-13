@@ -9,13 +9,22 @@
   <!-- Google Fonts (Inter) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <header>
-    <h1>DeductEats</h1>
-  </header>
+  <nav id="top-nav">
+    <div class="nav-logo">DeductEats</div>
+    <div class="nav-links">
+      <a href="welcome.html" class="nav-btn active">Welcome</a>
+      <a href="home.html" class="nav-btn">Home</a>
+      <a href="history.html" class="nav-btn">History</a>
+      <a href="learn.html" class="nav-btn">Learn</a>
+      <a href="settings.html" class="nav-btn">Settings</a>
+      <button id="logout-btn">Log Out</button>
+    </div>
+    <button class="hamburger" id="hamburger-btn">≡</button>
+  </nav>
 
   <main class="hero">
     <div class="tagline">
@@ -52,9 +61,9 @@
     // Cycling tagline script
     const dietTypes = [
       { text: 'gluten-free', class: 'gluten-free' },
-      { text: 'low-sodium',  class: 'low-sodium' },
-      { text: 'keto',        class: 'keto' },
-      { text: 'prescribed',  class: 'prescribed' }
+      { text: 'low-sodium', class: 'low-sodium' },
+      { text: 'keto', class: 'keto' },
+      { text: 'prescribed', class: 'prescribed' }
     ];
 
     const cycleText = document.getElementById('cycle-text');
@@ -81,11 +90,23 @@
       }, 5000);
     }
 
-    // Get Started button - redirects to main app
+    // Get Started button
     document.getElementById('start-login-btn')?.addEventListener('click', () => {
       localStorage.setItem('deductEatsLoggedIn', 'true');
       window.location.href = 'home.html';
     });
+  </script>
+
+  <!-- Hamburger menu toggle -->
+  <script>
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const navLinks = document.querySelector('.nav-links');
+
+    if (hamburgerBtn && navLinks) {
+      hamburgerBtn.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+      });
+    }
   </script>
 </body>
 </html>
