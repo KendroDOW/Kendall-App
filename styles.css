@@ -500,3 +500,43 @@ h2 {
     font-size: 1.4rem;
   }
 }
+
+.learn-page {
+  padding-top: 60px; /* More space between nav bar and first heading */
+}
+
+.learn-hero h1.centered {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.learn-page section {
+  margin-bottom: 48px; /* Space between sections */
+}
+
+.learn-page p {
+  margin-bottom: 24px; /* More space between paragraphs */
+}
+
+.disclaimer-section {
+  margin-top: 64px;
+  padding: 24px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.disclaimer-small {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #555;
+}
+
+.learn-link {
+  color: #1976d2;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.learn-link:hover {
+  color: #1565c0;
+}
