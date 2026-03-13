@@ -229,7 +229,7 @@ h1 {
 
 .secondary:hover { background: #f1f5f9; }
 
-/* Slideshow container - fixed size, left-to-right slide */
+/* Slideshow container - fixed size, one slide at a time with left-to-right transition */
 .slideshow-container {
   position: relative;
   width: 100%;
@@ -243,11 +243,13 @@ h1 {
 }
 
 .slideshow-wrapper {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 300%;
   height: 100%;
   display: flex;
-  transition: transform 0.8s ease-in-out;
+  transition: left 0.8s ease-in-out;
 }
 
 .slide {
