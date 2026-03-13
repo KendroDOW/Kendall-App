@@ -296,7 +296,7 @@ header, main, footer, .hero, .learn-page {
 }
 
 /* Side arrows - centered vertically on left/right edges */
-.arrow-btn {
+.arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -316,22 +316,22 @@ header, main, footer, .hero, .learn-page {
   z-index: 10;
 }
 
-.arrow-btn.prev {
+.arrow.left {
   left: 16px;
 }
 
-.arrow-btn.next {
+.arrow.right {
   right: 16px;
 }
 
-.arrow-btn:hover,
-.arrow-btn:focus {
+.arrow:hover,
+.arrow:focus {
   opacity: 1;
   background: #1976d2;
   transform: translateY(-50%) scale(1.15);
 }
 
-.arrow-btn:active {
+.arrow:active {
   transform: translateY(-50%) scale(0.95);
 }
 
@@ -354,17 +354,17 @@ header, main, footer, .hero, .learn-page {
     font-size: 0.95rem;
   }
 
-  .arrow-btn {
+  .arrow {
     width: 48px;
     height: 48px;
     font-size: 1.8rem;
   }
 
-  .arrow-btn.prev {
+  .arrow.left {
     left: 8px;
   }
 
-  .arrow-btn.next {
+  .arrow.right {
     right: 8px;
   }
 }
