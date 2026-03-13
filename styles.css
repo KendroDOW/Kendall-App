@@ -580,3 +580,36 @@ h2 {
 .learn-link:hover {
   color: #1565c0;
 }
+/* Slideshow arrows */
+.slideshow-arrows {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 32px;
+  z-index: 10;
+}
+
+.arrow-btn {
+  background: rgba(25, 118, 210, 0.7);
+  color: white;
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+}
+
+.arrow-btn:hover,
+.arrow-btn:focus {
+  opacity: 1;
+  background: #1976d2;
+  transform: scale(1.1);
+}
