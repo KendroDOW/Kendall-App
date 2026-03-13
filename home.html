@@ -48,10 +48,10 @@
         diet
       </div>
 
-      <!-- Slideshow -->
+      <!-- Slideshow with smooth left-to-right transition -->
       <div class="slideshow-container">
         <div class="slideshow-wrapper">
-          <!-- Slide 1: Tutorial -->
+          <!-- Slide 1: Tutorial invite -->
           <div class="slide">
             <h2>Learn How to Use DeductEats</h2>
             <p>Our step-by-step tutorial will guide you through scanning receipts and calculating deductions.</p>
@@ -183,7 +183,7 @@
     }
   </script>
 
-  <!-- Slideshow script -->
+  <!-- Slideshow script - one slide at a time, smooth left-to-right transition -->
   <script>
     const wrapper = document.querySelector('.slideshow-wrapper');
     const slides = document.querySelectorAll('.slide');
@@ -192,7 +192,7 @@
     function showSlide(n) {
       if (n >= slides.length) slideIndex = 0;
       if (n < 0) slideIndex = slides.length - 1;
-      wrapper.style.transform = `translateX(-${slideIndex * 33.333}%)`;
+      wrapper.style.left = `-${slideIndex * 100}%`;
     }
 
     function autoSlide() {
@@ -202,7 +202,7 @@
 
     if (wrapper && slides.length > 0) {
       showSlide(0);
-      setInterval(autoSlide, 5000); // Change slide every 5 seconds
+      setInterval(autoSlide, 5000); // Change every 5 seconds
     }
   </script>
 </body>
