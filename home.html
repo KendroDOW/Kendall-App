@@ -6,30 +6,101 @@
   <title>DeductEats - Home</title>
   <link rel="stylesheet" href="styles.css">
   
-  <!-- Google Fonts -->
+  <!-- Google Fonts (Inter) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- idb -->
+  <!-- idb library -->
   <script src="https://unpkg.com/idb@7.1.1/build/umd.js"></script>
   
   <!-- QuaggaJS -->
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
+
+  <style>
+    /* Slideshow container */
+    .slideshow {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto 24px;
+      overflow: hidden;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      padding: 32px 24px;
+      background: white;
+      text-align: center;
+      animation: fade 1s ease-in-out;
+    }
+
+    .slide.active {
+      display: block;
+    }
+
+    .slide h2 {
+      font-size: 1.6rem;
+      margin-bottom: 16px;
+      color: #1e293b;
+    }
+
+    .slide p {
+      font-size: 1rem;
+      margin-bottom: 24px;
+      color: #475569;
+    }
+
+    .slide button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .slide button:hover {
+      background: #1d4ed8;
+    }
+
+    /* Fade animation */
+    @keyframes fade {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+
+    /* Responsive adjustments for phone */
+    @media (max-width: 768px) {
+      .slide h2 {
+        font-size: 1.4rem;
+      }
+
+      .slide p {
+        font-size: 0.9rem;
+      }
+
+      .slide button {
+        padding: 10px 20px;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
 </head>
 <body>
 
   <nav id="top-nav">
-    <div class="nav-logo">DeductEats</div>
-    <div class="nav-links">
-      <a href="welcome.html" class="nav-btn">Welcome</a>
-      <a href="home.html" class="nav-btn active">Home</a>
-      <a href="history.html" class="nav-btn">History</a>
-      <a href="learn.html" class="nav-btn">Learn</a>
-      <a href="settings.html" class="nav-btn">Settings</a>
-      <button id="logout-btn">Log Out</button>
-    </div>
-    <button class="hamburger" id="hamburger-btn">≡</button>
+    <a href="welcome.html" class="nav-btn">Welcome</a>
+    <a href="home.html" class="nav-btn active">Home</a>
+    <a href="history.html" class="nav-btn">History</a>
+    <a href="learn.html" class="nav-btn">Learn</a>
+    <a href="settings.html" class="nav-btn">Settings</a>
+    <button id="logout-btn">Log Out</button>
   </nav>
 
   <header>
@@ -39,6 +110,7 @@
   </header>
 
   <main id="main-content">
+    <!-- Hero section with cycling tagline -->
     <div class="hero">
       <div class="tagline">
         Money back for your 
@@ -46,6 +118,30 @@
           <span id="cycle-text" class="cycle-text gluten-free">gluten-free</span>
         </span> 
         diet
+      </div>
+
+      <!-- New automatic slideshow -->
+      <div class="slideshow">
+        <!-- Slide 1: Tutorial invite -->
+        <div class="slide active">
+          <h2>Learn How to Use DeductEats</h2>
+          <p>Our step-by-step tutorial will guide you through scanning receipts and calculating deductions.</p>
+          <button onclick="window.location.href='tutorial.html';">Start Tutorial</button>
+        </div>
+
+        <!-- Slide 2: IRS quote -->
+        <div class="slide">
+          <h2>IRS Medical Expense Deduction</h2>
+          <p>"You can include the cost of special food in medical expenses only if: 1. The food doesn’t satisfy normal nutritional needs, 2. The food alleviates or treats an illness, and 3. The need for the food is substantiated by a physician. The amount you can include in medical expenses is limited to the amount by which the cost of the special food exceeds the cost of a normal diet." — IRS Publication 502</p>
+          <button onclick="window.location.href='learn.html';">Learn More</button>
+        </div>
+
+        <!-- Slide 3: Product qualification -->
+        <div class="slide">
+          <h2>See What Products Qualify</h2>
+          <p>Explore which foods under gluten-free, keto, low-sodium, and prescribed diets may qualify for medical expense deductions.</p>
+          <button onclick="window.location.href='learn.html';">Learn More</button>
+        </div>
       </div>
 
       <div class="hero-buttons">
@@ -56,6 +152,7 @@
       </div>
     </div>
 
+    <!-- Barcode scanning preview area -->
     <div id="barcode-preview-container" style="display:none; margin-top:24px; text-align:center;">
       <h3>Scan Barcode</h3>
       <p style="color:#555; margin-bottom:16px;">Align the barcode inside the red box. Zoom in if needed.</p>
@@ -66,6 +163,7 @@
       <button id="stop-barcode-scan" class="secondary" style="margin-top:24px; width:100%; max-width:320px;">Cancel Scan</button>
     </div>
 
+    <!-- Manual Edit Form -->
     <section id="edit-section" style="display:none;">
       <h2>Review & Edit Receipt</h2>
 
@@ -113,9 +211,9 @@
   <script>
     const dietTypes = [
       { text: 'gluten-free', class: 'gluten-free' },
-      { text: 'low-sodium', class: 'low-sodium' },
-      { text: 'keto', class: 'keto' },
-      { text: 'prescribed', class: 'prescribed' }
+      { text: 'low-sodium',  class: 'low-sodium' },
+      { text: 'keto',        class: 'keto' },
+      { text: 'prescribed',  class: 'prescribed' }
     ];
 
     const cycleText = document.getElementById('cycle-text');
@@ -143,17 +241,27 @@
     }
   </script>
 
-  <!-- Hamburger menu toggle -->
- <script>
-  const hamburgerBtn = document.getElementById('hamburger-btn');
-  const navLinks = document.querySelector('.nav-links');
+  <!-- Slideshow script -->
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    let slideIndex = 0;
 
-  if (hamburgerBtn && navLinks) {
-    hamburgerBtn.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
-    });
-  }
-</script>
+    function showSlide(n) {
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === n);
+      });
+    }
+
+    function autoSlide() {
+      slideIndex = (slideIndex + 1) % slides.length;
+      showSlide(slideIndex);
+      setTimeout(autoSlide, 5000); // Change slide every 5 seconds
+    }
+
+    if (slides.length > 0) {
+      showSlide(0);
+      autoSlide();
+    }
+  </script>
 </body>
 </html>
-
