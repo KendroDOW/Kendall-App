@@ -16,6 +16,60 @@
   
   <!-- QuaggaJS -->
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
+
+  <style>
+    /* Slideshow arrows */
+    .slideshow-arrows {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 32px;
+      z-index: 10;
+    }
+
+    .arrow-btn {
+      background: rgba(25, 118, 210, 0.7);
+      color: white;
+      border: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      font-size: 1.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.8;
+    }
+
+    .arrow-btn:hover,
+    .arrow-btn:focus {
+      opacity: 1;
+      background: #1976d2;
+      transform: scale(1.1);
+    }
+
+    .arrow-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 768px) {
+      .slideshow-arrows {
+        bottom: 12px;
+        gap: 24px;
+      }
+
+      .arrow-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1.6rem;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -57,6 +111,12 @@
             <p>Explore which foods under gluten-free, keto, low-sodium, and prescribed diets may qualify for medical expense deductions.</p>
             <button onclick="window.location.href='learn.html';">Learn More</button>
           </div>
+        </div>
+
+        <!-- Navigation arrows -->
+        <div class="slideshow-arrows">
+          <button class="arrow-btn" id="prev-slide">←</button>
+          <button class="arrow-btn" id="next-slide">→</button>
         </div>
       </div>
 
@@ -123,6 +183,40 @@
 
   <script src="script.js"></script>
 
+  <!-- Cycling tagline script -->
+  <script>
+    const dietTypes = [
+      { text: 'gluten-free', class: 'gluten-free' },
+      { text: 'low-sodium', class: 'low-sodium' },
+      { text: 'keto', class: 'keto' },
+      { text: 'prescribed', class: 'prescribed' }
+    ];
+
+    const cycleText = document.getElementById('cycle-text');
+    let currentIndex = 0;
+
+    if (cycleText) {
+      cycleText.textContent = dietTypes[0].text;
+      cycleText.className = 'cycle-text active ' + dietTypes[0].class;
+
+      setInterval(() => {
+        cycleText.classList.remove('active');
+        
+        setTimeout(() => {
+          currentIndex = (currentIndex + 1) % dietTypes.length;
+          const next = dietTypes[currentIndex];
+          
+          cycleText.textContent = next.text;
+          cycleText.className = 'cycle-text ' + next.class;
+          
+          setTimeout(() => {
+            cycleText.classList.add('active');
+          }, 100);
+        }, 800);
+      }, 5000);
+    }
+  </script>
+
   <!-- Hamburger menu toggle -->
   <script>
     const hamburgerBtn = document.getElementById('hamburger-btn');
@@ -135,10 +229,12 @@
     }
   </script>
 
-  <!-- Slideshow script -->
+  <!-- Slideshow script with arrows -->
   <script>
     const wrapper = document.querySelector('.slideshow-wrapper');
     const slides = document.querySelectorAll('.slide');
+    const prevBtn = document.getElementById('prev-slide');
+    const nextBtn = document.getElementById('next-slide');
     let slideIndex = 0;
 
     function showSlide(n) {
@@ -147,14 +243,32 @@
       wrapper.style.left = `-${slideIndex * 100}%`;
     }
 
-    function autoSlide() {
+    function nextSlide() {
       slideIndex++;
+      showSlide(slideIndex);
+    }
+
+    function prevSlide() {
+      slideIndex--;
       showSlide(slideIndex);
     }
 
     if (wrapper && slides.length > 0) {
       showSlide(0);
-      setInterval(autoSlide, 5000);
+
+      // Auto-slide
+      const autoInterval = setInterval(nextSlide, 5000);
+
+      // Manual arrows
+      if (nextBtn) nextBtn.addEventListener('click', () => {
+        clearInterval(autoInterval); // Pause auto on manual interaction
+        nextSlide();
+      });
+
+      if (prevBtn) prevBtn.addEventListener('click', () => {
+        clearInterval(autoInterval);
+        prevSlide();
+      });
     }
   </script>
 </body>
