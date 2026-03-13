@@ -14,10 +14,16 @@ body {
   overflow-x: hidden;
 }
 
-/* Navigation - centered links, Log Out on right */
+/* Center content */
+header, main, footer, .hero {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* Navigation - centered links, logo left-aligned with content, Log Out right-aligned */
 #top-nav {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
   background: #ffffff;
@@ -36,6 +42,8 @@ body {
   -webkit-text-fill-color: transparent;
   text-shadow: 0 1px 3px rgba(16,185,129,0.4);
   transition: transform 0.2s;
+  flex-shrink: 0;
+  margin-right: 32px; /* Space between logo and centered links */
 }
 
 .nav-logo:hover {
@@ -75,6 +83,7 @@ body {
   cursor: pointer;
   transition: background 0.2s;
   font-size: 1rem;
+  margin-left: auto; /* Pushes Log Out to far right */
 }
 
 #logout-btn:hover {
@@ -93,6 +102,15 @@ body {
 }
 
 @media (max-width: 768px) {
+  #top-nav {
+    justify-content: space-between;
+  }
+
+  .nav-logo {
+    margin-right: 0;
+    flex: none;
+  }
+
   .nav-links {
     display: none;
     flex-direction: column;
@@ -123,8 +141,11 @@ body {
 
   .nav-logo {
     font-size: 1.7rem;
-    text-align: center;
-    flex: none;
+    text-align: left;
+  }
+
+  #logout-btn {
+    margin-left: 0;
   }
 }
 
