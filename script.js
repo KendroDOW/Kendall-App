@@ -394,22 +394,17 @@ if (isHomePage) {
         updateDeductibles();
       } else if (el.matches('.name')) {
         currentItems[idx].name = el.value;
-        // Auto-update regular price and category when name changes
         const regularItem = suggestRegularItem(el.value);
         currentItems[idx].regularPrice = suggestRegularPrice(regularItem) || 0;
         currentItems[idx].category = suggestCategory([], el.value);
 
-        // Targeted update - no full re-render
         const itemBlock = el.closest('.item-block');
         if (itemBlock) {
-          // Update USDA price field
           const usdaInput = itemBlock.querySelector('.regular-price');
           if (usdaInput) {
             usdaInput.value = currentItems[idx].regularPrice;
             usdaInput.parentElement.classList.toggle('hidden', !currentItems[idx].regularPrice);
           }
-
-          // Update category dropdown
           const categorySelect = itemBlock.querySelector('.category');
           if (categorySelect) {
             categorySelect.value = currentItems[idx].category;
@@ -495,7 +490,7 @@ if (isHomePage) {
     });
   }
 
-  // Save receipt
+  // Save receipt - updated to prompt for photo
   if (saveReceiptBtn) {
     saveReceiptBtn.addEventListener('click', async () => {
       currentDate = document.getElementById('receipt-date').value;
@@ -507,12 +502,19 @@ if (isHomePage) {
         date: currentDate || new Date().toISOString().split('T')[0],
         location: currentLocation || 'Unknown Location',
         items: [...currentItems],
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        photos: []  // Will store image blobs
       };
 
       try {
-        await db.put(STORE_NAME, receipt);
+        const key = await db.put(STORE_NAME, receipt);
         alert('Receipt saved!');
+
+        // Prompt to attach photo
+        if (confirm('Receipt saved! Attach photo?')) {
+          attachPhotos(key);
+        }
+
         editSection.style.display = 'none';
         itemsContainer.innerHTML = '';
         document.getElementById('barcode-scan-btn').style.display = 'block';
@@ -522,6 +524,70 @@ if (isHomePage) {
         alert('Error saving receipt. Check console.');
       }
     });
+  }
+
+  // Attach photos to receipt
+  async function attachPhotos(receiptId) {
+    let photos = [];
+
+    function openCamera() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment';
+
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Compress image
+        const img = await createImageBitmap(file);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const maxSize = 1024;
+        let w = img.width;
+        let h = img.height;
+
+        if (w > h) {
+          if (w > maxSize) { h *= maxSize / w; w = maxSize; }
+        } else {
+          if (h > maxSize) { w *= maxSize / h; h = maxSize; }
+        }
+
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+
+        canvas.toBlob(async (blob) => {
+          photos.push(blob);
+
+          if (photos.length >= 3) {
+            await savePhotos(receiptId, photos);
+            alert('Photos added!');
+          } else {
+            if (confirm(`Photo ${photos.length} added. Add another? (max 3)`)) {
+              openCamera();
+            } else {
+              await savePhotos(receiptId, photos);
+              alert('Photos added!');
+            }
+          }
+        }, 'image/jpeg', 0.8);
+      };
+
+      input.click();
+    }
+
+    openCamera();
+  }
+
+  async function savePhotos(receiptId, photos) {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const receipt = await store.get(receiptId);
+    receipt.photos = receipt.photos.concat(photos); // Append new photos
+    await store.put(receipt);
+    await tx.done;
   }
 
   // Cancel edit
@@ -555,16 +621,31 @@ if (isHistoryPage) {
       all.forEach(r => {
         const card = document.createElement('div');
         card.className = 'history-card';
+        card.style.cursor = 'pointer';
+        card.style.padding = '16px';
+        card.style.background = 'white';
+        card.style.borderRadius = '8px';
+        card.style.marginBottom = '12px';
+        card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+
+        const photoCount = r.photos ? r.photos.length : 0;
+        const icon = photoCount > 0 ? '📷' : '+';
+        const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
+
         card.innerHTML = `
-          <strong>${r.location || 'Unknown'} ${r.date}</strong><br>
-          <small>${r.items.length} item(s) • Saved ${new Date(r.createdAt).toLocaleDateString()}</small>
+          <strong>${r.location || 'Unknown Location'} - ${r.date}</strong><br>
+          <small>${r.items.length} item(s) • Deductible: $${r.totalDeductible?.toFixed(2) || '0.00'}</small>
+          <div style="margin-top:8px; cursor:pointer;" onclick="event.stopPropagation(); attachPhotos(${r.id})">
+            ${icon} ${badge} <span style="font-size:0.8rem;color:#666;">(${photoCount > 0 ? 'View photos' : 'Add photo'})</span>
+          </div>
         `;
+
         card.addEventListener('click', () => showReport(r));
         logList.appendChild(card);
       });
     } catch (err) {
       console.error('loadLogs error:', err);
-      logList.innerHTML = '<p>Error loading history.</p>';
+      logList.innerHTML = '<p>Error loading history. Check console.</p>';
     }
   }
 
@@ -610,8 +691,10 @@ if (isHistoryPage) {
     document.getElementById('report-modal').style.display = 'none';
   });
 
+  // Load on page load
   loadLogs();
 
+  // Export CSV
   document.getElementById('export-csv')?.addEventListener('click', async () => {
     if (!db) await initDB();
     const tx = db.transaction(STORE_NAME);
