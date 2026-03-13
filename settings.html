@@ -3,29 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DeductEats - Settings</title>
+  <title>Settings - DeductEats</title>
   <link rel="stylesheet" href="styles.css">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
   <nav id="top-nav">
-    <a href="welcome.html" class="nav-btn">Welcome</a>
-    <a href="home.html" class="nav-btn">Home</a>
-    <a href="history.html" class="nav-btn">History</a>
-    <a href="learn.html" class="nav-btn">Learn</a>
-    <a href="settings.html" class="nav-btn active">Settings</a>
-    <button id="logout-btn">Log Out</button>
+    <div class="nav-logo">DeductEats</div>
+    <div class="nav-links">
+      <a href="welcome.html" class="nav-btn">Welcome</a>
+      <a href="home.html" class="nav-btn">Home</a>
+      <a href="history.html" class="nav-btn">History</a>
+      <a href="learn.html" class="nav-btn">Learn</a>
+      <a href="settings.html" class="nav-btn active">Settings</a>
+      <button id="logout-btn">Log Out</button>
+    </div>
+    <button class="hamburger" id="hamburger-btn">≡</button>
   </nav>
 
-  <header>
-    <div class="header-container">
-      <h1>DeductEats</h1>
-    </div>
-  </header>
-
   <main id="main-content">
-    <h2>Settings</h2>
-    <p>Coming soon: User preferences, logout, etc.</p>
+    <div class="hero">
+      <h1>Settings</h1>
+      <p>Coming soon: User preferences, account options, logout, and more.</p>
+    </div>
   </main>
 
   <footer id="social-footer">
@@ -38,5 +43,17 @@
   </footer>
 
   <script src="script.js"></script>
+
+  <!-- Hamburger menu toggle -->
+  <script>
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const navLinks = document.querySelector('.nav-links');
+
+    if (hamburgerBtn && navLinks) {
+      hamburgerBtn.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+      });
+    }
+  </script>
 </body>
 </html>
