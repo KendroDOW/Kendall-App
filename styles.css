@@ -14,13 +14,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Center content */
-header, main, footer, .hero {
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 0 16px;
-}
-
 /* Navigation - centered, hamburger on phone */
 #top-nav {
   display: flex;
@@ -35,13 +28,14 @@ header, main, footer, .hero {
 }
 
 .nav-logo {
-  font-size: 1.8rem;
-  font-weight: 800;
+  font-size: 1.9rem;
+  font-weight: 900; /* Extra bold for blocky feel */
+  letter-spacing: -1px; /* Condensed/blocky */
+  color: #10b981; /* Your previous green shade */
+  text-shadow: 0 1px 3px rgba(16,185,129,0.4);
   background: linear-gradient(to bottom, #10b981, #059669);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  letter-spacing: -0.5px;
-  text-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
   transition: transform 0.2s;
 }
 
@@ -127,7 +121,7 @@ header, main, footer, .hero {
   }
 
   .nav-logo {
-    font-size: 1.6rem;
+    font-size: 1.7rem;
     text-align: center;
     flex: none;
   }
@@ -250,7 +244,7 @@ header {
   width: 300%;
   height: 100%;
   display: flex;
-  transition: left 0.8s ease-in-out;
+  transition: left 0.8s ease-in-out; /* Smooth left-to-right */
 }
 
 .slide {
