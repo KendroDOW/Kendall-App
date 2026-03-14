@@ -287,7 +287,7 @@ async function savePhotos(receiptId, photos) {
     const store = tx.objectStore(STORE_NAME);
     const receipt = await store.get(receiptId);
     if (!receipt) {
-      console.error('Receipt not found for ID:', receiptId);
+      console.error('Receipt not found:', receiptId);
       alert('Receipt not found.');
       return;
     }
@@ -300,7 +300,7 @@ async function savePhotos(receiptId, photos) {
     console.log('Photos saved successfully to receipt:', receiptId);
   } catch (err) {
     console.error('Save photos error:', err);
-    alert('Error saving photos. Check console for details.');
+    alert('Error saving photos. Check console.');
   }
 }
 
@@ -664,56 +664,51 @@ if (isHomePage) {
 
 // History page logic
 if (isHistoryPage) {
-async function loadLogs() {
-  const logList = document.getElementById('log-list');
-  if (!logList) return;
-  logList.innerHTML = '<p>Loading history...</p>';
+  async function loadLogs() {
+    const logList = document.getElementById('log-list');
+    if (!logList) return;
+    logList.innerHTML = '<p>Loading history...</p>';
 
-  try {
-    if (!db) await initDB();
+    try {
+      if (!db) await initDB();
 
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    const all = await store.getAll();
-    await tx.done;
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const all = await store.getAll();
+      await tx.done;
 
-    console.log('Loaded receipts from DB:', all.length);
-    all.forEach(r => {
-      console.log('Receipt ID:', r.id, 'Photos count:', r.photos ? r.photos.length : 0);
-    });
+      logList.innerHTML = all.length ? '' : '<p>No receipts logged yet.</p>';
 
-    logList.innerHTML = all.length ? '' : '<p>No receipts logged yet.</p>';
+      all.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'history-card';
+        card.style.cursor = 'pointer';
+        card.style.padding = '16px';
+        card.style.background = 'white';
+        card.style.borderRadius = '8px';
+        card.style.marginBottom = '12px';
+        card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
 
-    all.forEach(r => {
-      const card = document.createElement('div');
-      card.className = 'history-card';
-      card.style.cursor = 'pointer';
-      card.style.padding = '16px';
-      card.style.background = 'white';
-      card.style.borderRadius = '8px';
-      card.style.marginBottom = '12px';
-      card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+        const photoCount = r.photos ? r.photos.length : 0;
+        const icon = photoCount > 0 ? '📷' : '+';
+        const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
 
-      const photoCount = r.photos ? r.photos.length : 0;
-      const icon = photoCount > 0 ? '📷' : '+';
-      const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
+        card.innerHTML = `
+          <strong>${r.location || 'Unknown Location'} - ${r.date}</strong><br>
+          <small>${r.items.length} item(s) • Deductible: $${r.totalDeductible?.toFixed(2) || '0.00'}</small>
+          <div style="margin-top:8px; cursor:pointer;" onclick="event.stopPropagation(); attachPhotos(${r.id})">
+            ${icon} ${badge} <span style="font-size:0.8rem;color:#666;">(${photoCount > 0 ? 'View photos' : 'Add photo'})</span>
+          </div>
+        `;
 
-      card.innerHTML = `
-        <strong>${r.location || 'Unknown Location'} - ${r.date}</strong><br>
-        <small>${r.items.length} item(s) • Deductible: $${r.totalDeductible?.toFixed(2) || '0.00'}</small>
-        <div style="margin-top:8px; cursor:pointer;" onclick="event.stopPropagation(); attachPhotos(${r.id})">
-          ${icon} ${badge} <span style="font-size:0.8rem;color:#666;">(${photoCount > 0 ? 'View photos' : 'Add photo'})</span>
-        </div>
-      `;
-
-      card.addEventListener('click', () => showReport(r));
-      logList.appendChild(card);
-    });
-  } catch (err) {
-    console.error('loadLogs error:', err);
-    logList.innerHTML = '<p>Error loading history. Check console.</p>';
+        card.addEventListener('click', () => showReport(r));
+        logList.appendChild(card);
+      });
+    } catch (err) {
+      console.error('loadLogs error:', err);
+      logList.innerHTML = '<p>Error loading history. Check console.</p>';
+    }
   }
-}
 
   function showReport(receipt) {
     const modal = document.getElementById('report-modal');
