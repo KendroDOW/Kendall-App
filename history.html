@@ -16,7 +16,7 @@
 </head>
 <body>
 
-  <nav id="top-nav" class="main-nav">
+  <nav id="top-nav">
     <div class="nav-logo">DeductEats</div>
     <div class="nav-links">
       <a href="welcome.html" class="nav-btn">Welcome</a>
@@ -40,13 +40,13 @@
     <button id="export-csv" class="primary">Export All to CSV</button>
 
     <!-- Photo Viewer Modal -->
-<div id="photo-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center;">
-  <div style="background:white; border-radius:12px; padding:16px; width:90%; max-width:600px; max-height:85%; overflow-y:auto; position:relative;">
-    <button onclick="document.getElementById('photo-modal').style.display='none';" style="position:absolute; top:8px; right:16px; background:none; border:none; font-size:2.5rem; cursor:pointer; color:#333;">×</button>
-    <h3>Receipt Photos</h3>
-    <div id="photo-gallery" style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center;"></div>
-  </div>
-</div>
+    <div id="photo-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center;">
+      <div style="background:white; border-radius:12px; padding:16px; width:90%; max-width:600px; max-height:85%; overflow-y:auto; position:relative;">
+        <button onclick="document.getElementById('photo-modal').style.display='none';" style="position:absolute; top:8px; right:16px; background:none; border:none; font-size:2.5rem; cursor:pointer; color:#333;">×</button>
+        <h3>Receipt Photos</h3>
+        <div id="photo-gallery" style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center;"></div>
+      </div>
+    </div>
 
     <!-- Report Modal (existing) -->
     <section id="report-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center;">
@@ -83,4 +83,3 @@
   </script>
 </body>
 </html>
-
