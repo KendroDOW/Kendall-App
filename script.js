@@ -12,7 +12,7 @@ async function initDB() {
 }
 initDB();
 
-// USDA average regular prices (per lb or unit, approximate values)
+// USDA prices
 const usdaRegularPrices = {
   'oats': 0.55,
   'flour': 0.50,
@@ -214,11 +214,19 @@ async function attachPhotos(receiptId) {
   let photos = [];
 
   const input = document.getElementById('hidden-camera-input');
+  if (!input) {
+    console.error('Hidden camera input not found');
+    alert('Camera input not available.');
+    return;
+  }
 
   function openCamera() {
+    input.value = ''; // Clear previous selection
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
+
+      console.log('Photo selected, size:', file.size);
 
       // Compress image
       const img = await createImageBitmap(file);
@@ -239,37 +247,54 @@ async function attachPhotos(receiptId) {
       ctx.drawImage(img, 0, 0, w, h);
 
       canvas.toBlob(async (blob) => {
+        if (!blob) {
+          console.error('Blob creation failed');
+          alert('Failed to process photo.');
+          return;
+        }
         photos.push(blob);
+        console.log('Photo processed, total:', photos.length);
 
         if (photos.length >= 3) {
           await savePhotos(receiptId, photos);
-          alert('Photos added!');
-          input.value = ''; // Clear input for next use
+          alert('Photos saved!');
+          input.value = '';
         } else {
           if (confirm(`Photo ${photos.length} added. Add another? (max 3)`)) {
             input.click();
           } else {
             await savePhotos(receiptId, photos);
-            alert('Photos added!');
+            alert('Photos saved!');
             input.value = '';
           }
         }
       }, 'image/jpeg', 0.8);
     };
 
-    input.click(); // This is called directly from user tap → allowed
+    input.click();
   }
 
   openCamera();
 }
 
 async function savePhotos(receiptId, photos) {
-  const tx = db.transaction(STORE_NAME, 'readwrite');
-  const store = tx.objectStore(STORE_NAME);
-  const receipt = await store.get(receiptId);
-  receipt.photos = receipt.photos ? receipt.photos.concat(photos) : photos;
-  await store.put(receipt);
-  await tx.done;
+  try {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const receipt = await store.get(receiptId);
+    if (!receipt) {
+      console.error('Receipt not found:', receiptId);
+      alert('Receipt not found.');
+      return;
+    }
+    receipt.photos = receipt.photos ? receipt.photos.concat(photos) : photos;
+    await store.put(receipt);
+    await tx.done;
+    console.log('Photos saved to receipt:', receiptId);
+  } catch (err) {
+    console.error('Save photos error:', err);
+    alert('Error saving photos. Check console.');
+  }
 }
 
 if (isHomePage) {
