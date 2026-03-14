@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DeductEats - Home</title>
   <link rel="stylesheet" href="styles.css">
- 
+  
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
- 
+  
   <!-- idb -->
   <script src="https://unpkg.com/idb@7.1.1/build/umd.js"></script>
- 
+  
   <!-- QuaggaJS -->
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
 </head>
@@ -30,6 +30,7 @@
     </div>
     <button class="hamburger" id="hamburger-btn">≡</button>
   </nav>
+
   <main id="main-content">
     <div class="hero">
       <!-- Slideshow -->
@@ -65,6 +66,7 @@
         <button id="manual-btn" class="secondary">Manually Add Receipt</button>
       </div>
     </div>
+
     <!-- Full-screen barcode preview -->
     <div id="barcode-preview-container" style="display:none; position:fixed; inset:0; background:#000; z-index:1001; flex-direction:column; align-items:center; justify-content:center; color:white;">
       <h3 style="margin:16px 0 8px;">Scan Barcode</h3>
@@ -75,9 +77,10 @@
       </div>
       <button id="stop-barcode-scan" class="secondary" style="margin-top:24px; width:90%; max-width:320px; padding:14px; font-size:1.1rem;">Cancel Scan</button>
     </div>
+
     <!-- Manual Edit Form -->
     <section id="edit-section" style="display:none;">
-      <h2>Review & Edit Receipt</h2>
+      <h2 id="edit-title">Review & Edit Receipt</h2>
       <div class="form-field">
         <label for="receipt-location">Location</label>
         <input type="text" id="receipt-location" placeholder="e.g. Walmart Saint George" />
@@ -100,39 +103,8 @@
         </p>
       </div>
     </section>
-    <!-- Photo Capture Modal -->
-<div id="photo-capture-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:999; align-items:center; justify-content:center;">
-  <div style="background:white; border-radius:12px; padding:24px; width:90%; max-width:500px; text-align:center; position:relative;">
-    <button onclick="closePhotoModal()" style="position:absolute; top:8px; right:16px; background:none; border:none; font-size:2.5rem; cursor:pointer;">×</button>
-    <h3>Add Receipt Photo</h3>
-    <p id="photo-status">Take a photo (up to 3)</p>
-    <div id="photo-preview" style="margin:16px auto; width:90%; height:200px; background:#f0f0f0; border-radius:8px; display:flex; align-items:center; justify-content:center;">
-      <p style="color:#666;">No photo yet</p>
-    </div>
-    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      <button id="take-photo-btn" class="primary">Take Photo</button>
-      <button id="save-photos-btn" class="secondary" disabled>Save Photo(s)</button>
-      <button id="cancel-photos-btn" class="secondary">Cancel</button>
-    </div>
-  </div>
-</div>
-    <!-- Custom Photo Capture Modal -->
-<div id="photo-capture-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:999; align-items:center; justify-content:center;">
-  <div style="background:white; border-radius:12px; padding:24px; width:90%; max-width:500px; text-align:center; position:relative;">
-    <button onclick="document.getElementById('photo-capture-modal').style.display='none';" style="position:absolute; top:8px; right:16px; background:none; border:none; font-size:2.5rem; cursor:pointer;">×</button>
-    <h3>Add Receipt Photo</h3>
-    <p id="photo-status">Take a photo of your receipt (up to 3)</p>
-    <div id="photo-preview" style="margin:16px auto; width:90%; height:200px; background:#f0f0f0; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-      <p style="color:#666;">No photo yet</p>
-    </div>
-    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      <button id="take-photo-btn" class="primary">Take Photo</button>
-      <button id="save-photos-btn" class="secondary" disabled>Save Photo(s)</button>
-      <button id="cancel-photos-btn" class="secondary">Cancel</button>
-    </div>
-  </div>
-</div>
   </main>
+
   <footer id="social-footer">
     <div class="social-icons">
       <a href="#" title="Follow on X" class="social-link">𝕏</a>
@@ -141,7 +113,9 @@
     </div>
     <small>© 2026 DeductEats • Saint George, Utah</small>
   </footer>
+
   <script src="script.js"></script>
+
   <!-- Cycling tagline script -->
   <script>
     const dietTypes = [
@@ -157,14 +131,14 @@
       cycleText.className = 'cycle-text active ' + dietTypes[0].class;
       setInterval(() => {
         cycleText.classList.remove('active');
-       
+        
         setTimeout(() => {
           currentIndex = (currentIndex + 1) % dietTypes.length;
           const next = dietTypes[currentIndex];
-         
+          
           cycleText.textContent = next.text;
           cycleText.className = 'cycle-text ' + next.class;
-         
+          
           setTimeout(() => {
             cycleText.classList.add('active');
           }, 100);
@@ -172,6 +146,7 @@
       }, 5000);
     }
   </script>
+
   <!-- Hamburger menu toggle -->
   <script>
     const hamburgerBtn = document.getElementById('hamburger-btn');
@@ -182,6 +157,7 @@
       });
     }
   </script>
+
   <!-- Slideshow script -->
   <script>
     const wrapper = document.querySelector('.slideshow-wrapper');
@@ -203,19 +179,96 @@
     }
     if (wrapper) {
       showSlide(0);
-      // Auto cycle
       setInterval(nextSlide, 5000);
-      // Manual arrows
       nextBtn?.addEventListener('click', nextSlide);
       prevBtn?.addEventListener('click', prevSlide);
     }
   </script>
-  <!-- Hidden file input for camera (global, reused) -->
-<input type="file" id="hidden-camera-input" accept="image/*" capture="environment" style="display:none;">
+
+  <!-- Hidden camera input -->
+  <input type="file" id="hidden-camera-input" accept="image/*" capture="environment" style="display:none;">
+
+  <!-- Edit pre-fill logic (new) -->
   <script>
-function closePhotoModal() {
-  document.getElementById('photo-capture-modal').style.display = 'none';
-}
-</script>
+    // Check if we're editing an existing receipt
+    window.addEventListener('load', async () => {
+      const editId = localStorage.getItem('editReceiptId');
+      if (editId) {
+        document.getElementById('edit-title').textContent = 'Edit Receipt';
+        document.getElementById('save-receipt').textContent = 'Update Receipt';
+
+        try {
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const store = tx.objectStore(STORE_NAME);
+          const receipt = await store.get(Number(editId));
+          await tx.done;
+
+          if (receipt) {
+            document.getElementById('receipt-location').value = receipt.location || '';
+            document.getElementById('receipt-date').value = receipt.date || '';
+
+            currentItems = receipt.items || [];
+            renderItems();
+            updateDeductibles();
+
+            // Change save button to update existing receipt
+            saveReceiptBtn.onclick = async () => {
+              currentDate = document.getElementById('receipt-date').value;
+              currentLocation = document.getElementById('receipt-location').value;
+
+              if (currentItems.length === 0) return alert('No items to save.');
+
+              let totalDeduct = 0;
+              currentItems.forEach(item => {
+                if (item.regularPrice > 0) {
+                  let deduct = 0;
+                  if (item.quantity) {
+                    const qtyInLb = convertToLb(item.quantity);
+                    if (qtyInLb > 0) {
+                      const specialtyTotal = item.price || 0;
+                      const regularTotal = item.regularPrice * qtyInLb;
+                      deduct = specialtyTotal - regularTotal;
+                    } else {
+                      deduct = (item.price || 0) - item.regularPrice;
+                    }
+                  } else {
+                    deduct = (item.price || 0) - item.regularPrice;
+                  }
+                  totalDeduct += deduct > 0 ? deduct : 0;
+                }
+              });
+
+              const updatedReceipt = {
+                ...receipt,
+                date: currentDate || new Date().toISOString().split('T')[0],
+                location: currentLocation || 'Unknown Location',
+                items: [...currentItems],
+                totalDeductible: totalDeduct
+              };
+
+              try {
+                await db.put(STORE_NAME, updatedReceipt);
+                alert('Receipt updated!');
+                localStorage.removeItem('editReceiptId');
+                editSection.style.display = 'none';
+                itemsContainer.innerHTML = '';
+                document.getElementById('barcode-scan-btn').style.display = 'block';
+                document.getElementById('manual-btn').style.display = 'block';
+                document.getElementById('edit-title').textContent = 'Review & Edit Receipt';
+                document.getElementById('save-receipt').textContent = 'Save Receipt';
+                saveReceiptBtn.onclick = null; // Reset to original
+              } catch (err) {
+                console.error('Update error:', err);
+                alert('Error updating receipt.');
+              }
+            };
+          }
+        } catch (err) {
+          console.error('Load receipt for edit error:', err);
+          alert('Error loading receipt for edit.');
+        }
+      }
+    });
+  </script>
 </body>
 </html>
