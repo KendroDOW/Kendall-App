@@ -718,3 +718,24 @@ if (isHistoryPage) {
     URL.revokeObjectURL(url);
   });
 }
+<!-- Add this script -->
+<script>
+  const scanBtn = document.getElementById('barcode-scan-btn');
+  const previewContainer = document.getElementById('barcode-preview-container');
+  const mainNav = document.getElementById('top-nav');
+  const stopBtn = document.getElementById('stop-barcode-scan');
+
+  if (scanBtn) {
+    scanBtn.addEventListener('click', () => {
+      previewContainer.style.display = 'flex';
+      mainNav.style.display = 'none';  // Hide nav bar when scanning
+    });
+  }
+
+  if (stopBtn) {
+    stopBtn.addEventListener('click', () => {
+      previewContainer.style.display = 'none';
+      mainNav.style.display = 'flex';  // Show nav bar again
+    });
+  }
+</script>
