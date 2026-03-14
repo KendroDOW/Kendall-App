@@ -697,56 +697,56 @@ if (isHomePage) {
 
 // History page logic
 if (isHistoryPage) {
-  async function loadLogs() {
-    const logList = document.getElementById('log-list');
-    if (!logList) return;
-    logList.innerHTML = '<p>Loading history...</p>';
+ async function loadLogs() {
+  const logList = document.getElementById('log-list');
+  if (!logList) return;
+  logList.innerHTML = '<p>Loading history...</p>';
 
-    try {
-      if (!db) await initDB();
+  try {
+    if (!db) await initDB();
 
-      const tx = db.transaction(STORE_NAME, 'readonly');
-      const store = tx.objectStore(STORE_NAME);
-      const all = await store.getAll();
-      await tx.done;
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const all = await store.getAll();
+    await tx.done;
 
-      logList.innerHTML = all.length ? '' : '<p>No receipts logged yet.</p>';
+    logList.innerHTML = all.length ? '' : '<p>No receipts logged yet.</p>';
 
-      all.forEach(r => {
-        const card = document.createElement('div');
-        card.className = 'history-card';
-        card.style.cursor = 'pointer';
-        card.style.padding = '16px';
-        card.style.background = 'white';
-        card.style.borderRadius = '8px';
-        card.style.marginBottom = '12px';
-        card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+    all.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'history-card';
+      card.style.cursor = 'pointer';
+      card.style.padding = '16px';
+      card.style.background = 'white';
+      card.style.borderRadius = '8px';
+      card.style.marginBottom = '12px';
+      card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
 
-        const photoCount = r.photos ? r.photos.length : 0;
-        const addIcon = '+';
-        const cameraIcon = photoCount > 0 ? '📷' : '';
-        const eyeIcon = photoCount > 0 ? '👁️' : '';
-        const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
+      const photoCount = r.photos ? r.photos.length : 0;
+      const addIcon = '+';
+      const cameraIcon = photoCount > 0 ? '📷' : '';
+      const eyeIcon = '👁️';  // Always visible for testing
+      const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
 
-        card.innerHTML = `
-          <strong>${r.location || 'Unknown Location'} - ${r.date}</strong><br>
-          <small>${r.items.length} item(s) • Deductible: $${r.totalDeductible?.toFixed(2) || '0.00'}</small>
-          <div style="margin-top:8px; cursor:pointer;">
-            <span class="photo-icon" title="Add receipt photo" onclick="event.stopPropagation(); attachPhotos(${r.id})">${addIcon}</span>
-            ${badge}
-            ${cameraIcon ? `<span class="photo-icon" title="Add more photos (placeholder)" onclick="event.stopPropagation(); attachPhotos(${r.id})">${cameraIcon}</span>` : ''}
-            ${eyeIcon ? `<span class="photo-icon" title="View photos (placeholder)" onclick="event.stopPropagation(); alert('View photos coming soon!')">${eyeIcon}</span>` : ''}
-          </div>
-        `;
+      card.innerHTML = `
+        <strong>${r.location || 'Unknown Location'} - ${r.date}</strong><br>
+        <small>${r.items.length} item(s) • Deductible: $${r.totalDeductible?.toFixed(2) || '0.00'}</small>
+        <div style="margin-top:8px; cursor:pointer;">
+          <span class="photo-icon" title="Add receipt photo" onclick="event.stopPropagation(); attachPhotos(${r.id})">${addIcon}</span>
+          ${badge}
+          ${cameraIcon ? `<span class="photo-icon" title="Add more photos" onclick="event.stopPropagation(); attachPhotos(${r.id})">${cameraIcon}</span>` : ''}
+          <span class="photo-icon" title="View photos (test mode)" onclick="event.stopPropagation(); alert('View photos coming soon!')">${eyeIcon}</span>
+        </div>
+      `;
 
-        card.addEventListener('click', () => showReport(r));
-        logList.appendChild(card);
-      });
-    } catch (err) {
-      console.error('loadLogs error:', err);
-      logList.innerHTML = '<p>Error loading history. Check console.</p>';
-    }
+      card.addEventListener('click', () => showReport(r));
+      logList.appendChild(card);
+    });
+  } catch (err) {
+    console.error('loadLogs error:', err);
+    logList.innerHTML = '<p>Error loading history. Check console.</p>';
   }
+}
 
   function showReport(receipt) {
     const modal = document.getElementById('report-modal');
