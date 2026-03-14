@@ -560,3 +560,18 @@ h2 {
     font-size: 1.4rem;
   }
 }
+.photo-icon {
+  cursor: pointer;
+  font-size: 1.6rem;
+  margin: 0 8px;
+  vertical-align: middle;
+}
+
+.photo-badge {
+  background: #1976d2;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+  vertical-align: middle;
+}
