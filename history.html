@@ -39,12 +39,29 @@
 
     <button id="export-csv" class="primary">Export All to CSV</button>
 
-    <!-- Photo Viewer Modal -->
-    <div id="photo-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center;">
-      <div style="background:white; border-radius:12px; padding:16px; width:90%; max-width:600px; max-height:85%; overflow-y:auto; position:relative;">
-        <button onclick="document.getElementById('photo-modal').style.display='none';" style="position:absolute; top:8px; right:16px; background:none; border:none; font-size:2.5rem; cursor:pointer; color:#333;">×</button>
-        <h3>Receipt Photos</h3>
-        <div id="photo-gallery" style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center;"></div>
+    <!-- Capture Modal (already added) -->
+    <div id="photo-capture-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:999; align-items:center; justify-content:center;">
+      <div style="background:white; border-radius:12px; padding:24px; width:90%; max-width:500px; text-align:center; position:relative;">
+        <button onclick="document.getElementById('photo-capture-modal').style.display='none';" style="position:absolute; top:8px; right:16px; background:none; border:none; font-size:2.5rem; cursor:pointer;">×</button>
+        <h3>Add Receipt Photo</h3>
+        <p id="photo-status">Take a photo of your receipt (up to 3)</p>
+        <div id="photo-preview" style="margin:16px auto; width:90%; height:200px; background:#f0f0f0; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+          <p style="color:#666;">No photo yet</p>
+        </div>
+        <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+          <button id="take-photo-btn" class="primary">Take Photo</button>
+          <button id="save-photos-btn" class="secondary" disabled>Save Photo(s)</button>
+          <button id="cancel-photos-btn" class="secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW: Viewer Modal for existing photos -->
+    <div id="photo-viewer-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:200; align-items:center; justify-content:center;">
+      <div style="background:white; border-radius:12px; padding:24px; width:90%; max-width:700px; max-height:85%; overflow-y:auto; position:relative;">
+        <button onclick="document.getElementById('photo-viewer-modal').style.display='none';" style="position:absolute; top:8px; right:16px; background:none; border:none; font-size:2.5rem; cursor:pointer;">×</button>
+        <h3>View Receipt Photos</h3>
+        <div id="viewer-gallery" style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center;"></div>
       </div>
     </div>
 
@@ -57,39 +74,6 @@
         <button id="close-report" class="secondary" style="margin-top:24px; width:100%;">Back to List</button>
       </div>
     </section>
-    <!-- Photo Capture Modal -->
-<!-- Photo Capture Modal -->
-<div id="photo-capture-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:999; align-items:center; justify-content:center;">
-  <div style="background:white; border-radius:12px; padding:24px; width:90%; max-width:500px; text-align:center; position:relative;">
-    <button onclick="closePhotoModal()" style="position:absolute; top:8px; right:16px; background:none; border:none; font-size:2.5rem; cursor:pointer;">×</button>
-    <h3>Add Receipt Photo</h3>
-    <p id="photo-status">Take a photo (up to 3)</p>
-    <div id="photo-preview" style="margin:16px auto; width:90%; height:200px; background:#f0f0f0; border-radius:8px; display:flex; align-items:center; justify-content:center;">
-      <p style="color:#666;">No photo yet</p>
-    </div>
-    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      <button id="take-photo-btn" class="primary">Take Photo</button>
-      <button id="save-photos-btn" class="secondary" disabled>Save Photo(s)</button>
-      <button id="cancel-photos-btn" class="secondary">Cancel</button>
-    </div>
-  </div>
-</div>
-    <!-- Custom Photo Capture Modal -->
-<div id="photo-capture-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:999; align-items:center; justify-content:center;">
-  <div style="background:white; border-radius:12px; padding:24px; width:90%; max-width:500px; text-align:center; position:relative;">
-    <button onclick="document.getElementById('photo-capture-modal').style.display='none';" style="position:absolute; top:8px; right:16px; background:none; border:none; font-size:2.5rem; cursor:pointer;">×</button>
-    <h3>Add Receipt Photo</h3>
-    <p id="photo-status">Take a photo of your receipt (up to 3)</p>
-    <div id="photo-preview" style="margin:16px auto; width:90%; height:200px; background:#f0f0f0; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-      <p style="color:#666;">No photo yet</p>
-    </div>
-    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      <button id="take-photo-btn" class="primary">Take Photo</button>
-      <button id="save-photos-btn" class="secondary" disabled>Save Photo(s)</button>
-      <button id="cancel-photos-btn" class="secondary">Cancel</button>
-    </div>
-  </div>
-</div>
   </main>
 
   <footer id="social-footer">
@@ -117,10 +101,5 @@
 
   <!-- Hidden camera input -->
   <input type="file" id="hidden-camera-input" accept="image/*" capture="environment" style="display:none;">
-  <script>
-function closePhotoModal() {
-  document.getElementById('photo-capture-modal').style.display = 'none';
-}
-</script>
 </body>
 </html>
