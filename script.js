@@ -209,7 +209,7 @@ const filename = path.split('/').pop() || '';
 const isHomePage = filename === 'home.html' || filename === 'index.html' || path === '' || path.includes('home');
 const isHistoryPage = filename === 'history.html' || path.includes('history');
 
-// Global attachPhotos function (with custom modal)
+// Global attachPhotos function
 async function attachPhotos(receiptId) {
   let photos = [];
 
@@ -227,7 +227,7 @@ async function attachPhotos(receiptId) {
     return;
   }
 
-  // Reset state
+  // Reset
   photos = [];
   preview.innerHTML = '<p style="color:#666;">No photo yet</p>';
   status.textContent = 'Take a photo of your receipt (up to 3)';
@@ -244,7 +244,7 @@ async function attachPhotos(receiptId) {
       const file = e.target.files[0];
       if (!file) return;
 
-      console.log('Photo file selected, size:', file.size);
+      console.log('Photo selected, size:', file.size);
 
       try {
         const img = await createImageBitmap(file);
