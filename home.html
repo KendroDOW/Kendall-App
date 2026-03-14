@@ -196,5 +196,10 @@
   </script>
   <!-- Hidden file input for camera (global, reused) -->
 <input type="file" id="hidden-camera-input" accept="image/*" capture="environment" style="display:none;">
+  <script>
+function closePhotoModal() {
+  document.getElementById('photo-capture-modal').style.display = 'none';
+}
+</script>
 </body>
 </html>
