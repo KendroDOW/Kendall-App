@@ -209,7 +209,7 @@ const filename = path.split('/').pop() || '';
 const isHomePage = filename === 'home.html' || filename === 'index.html' || path === '' || path.includes('home');
 const isHistoryPage = filename === 'history.html' || path.includes('history');
 
-// Global attachPhotos function (moved outside isHomePage so history can use it)
+// Global attachPhotos function (moved here so history page can use it)
 async function attachPhotos(receiptId) {
   let photos = [];
 
