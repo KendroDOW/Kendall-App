@@ -6,12 +6,12 @@
   <title>DeductEats - Home</title>
   <link rel="stylesheet" href="styles.css">
   
-  <!-- Google Fonts (Inter) -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   
-  <!-- idb library -->
+  <!-- idb -->
   <script src="https://unpkg.com/idb@7.1.1/build/umd.js"></script>
   
   <!-- QuaggaJS -->
@@ -34,7 +34,7 @@
 
   <main id="main-content">
     <div class="hero">
-      <!-- Slideshow with generic side arrows -->
+      <!-- Slideshow -->
       <div class="slideshow-container">
         <div class="slideshow-wrapper">
           <!-- Slide 1 -->
@@ -44,10 +44,10 @@
             <button onclick="window.location.href='tutorial.html';">Start Tutorial</button>
           </div>
 
-          <!-- Slide 2 -->
+          <!-- Slide 2 (shortened quote) -->
           <div class="slide">
             <h2>IRS Medical Expense Deduction</h2>
-            <p>"You can include the cost of special food in medical expenses only if: 1. The food doesn’t satisfy normal nutritional needs, 2. The food alleviates or treats an illness, and 3. The need for the food is substantiated by a physician. The amount you can include in medical expenses is limited to the amount by which the cost of the special food exceeds the cost of a normal diet." — IRS Publication 502</p>
+            <p>"You can include the cost of special food in medical expenses only if: 1. The food doesn’t satisfy normal nutritional needs, 2. The food alleviates or treats an illness, and 3. The need for the food is substantiated by a physician." — IRS Publication 502</p>
             <button onclick="window.location.href='learn.html';">Learn More</button>
           </div>
 
@@ -59,7 +59,7 @@
           </div>
         </div>
 
-        <!-- Generic side arrows (always visible, centered vertically on edges) -->
+        <!-- Side arrows -->
         <button class="arrow left" id="prev-slide">←</button>
         <button class="arrow right" id="next-slide">→</button>
       </div>
@@ -72,15 +72,15 @@
       </div>
     </div>
 
-    <!-- Barcode scanning preview area -->
-    <div id="barcode-preview-container" style="display:none; margin-top:24px; text-align:center;">
-      <h3>Scan Barcode</h3>
-      <p style="color:#555; margin-bottom:16px;">Align the barcode inside the red box. Zoom in if needed.</p>
-      <div id="barcode-video-container" style="position:relative; width:100%; max-width:480px; margin:0 auto; background:#000; border-radius:12px; overflow:hidden;">
-        <video id="barcode-video" autoplay playsinline style="width:100%; height:auto;"></video>
-        <div id="barcode-guide" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:80%; height:30%; border:4px dashed red; border-radius:12px; pointer-events:none; box-shadow:0 0 0 9999px rgba(0,0,0,0.5);"></div>
+    <!-- Full-screen barcode preview -->
+    <div id="barcode-preview-container" style="display:none; position:fixed; inset:0; background:#000; z-index:999; flex-direction:column; align-items:center; justify-content:center; color:white;">
+      <h3 style="margin:16px 0 8px;">Scan Barcode</h3>
+      <p style="margin-bottom:16px; max-width:90%; text-align:center;">Align the barcode inside the red box. Zoom in if needed.</p>
+      <div id="barcode-video-container" style="position:relative; width:90%; max-width:480px; aspect-ratio:4/3; background:#000; border-radius:12px; overflow:hidden;">
+        <video id="barcode-video" autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+        <div id="barcode-guide" style="position:absolute; inset:0; margin:auto; width:80%; height:40%; border:4px dashed #ff0000; border-radius:12px; pointer-events:none; box-shadow:0 0 0 9999px rgba(0,0,0,0.5);"></div>
       </div>
-      <button id="stop-barcode-scan" class="secondary" style="margin-top:24px; width:100%; max-width:320px;">Cancel Scan</button>
+      <button id="stop-barcode-scan" class="secondary" style="margin-top:24px; width:90%; max-width:320px; padding:14px; font-size:1.1rem;">Cancel Scan</button>
     </div>
 
     <!-- Manual Edit Form -->
@@ -126,6 +126,40 @@
   </footer>
 
   <script src="script.js"></script>
+
+  <!-- Cycling tagline script -->
+  <script>
+    const dietTypes = [
+      { text: 'gluten-free', class: 'gluten-free' },
+      { text: 'low-sodium', class: 'low-sodium' },
+      { text: 'keto', class: 'keto' },
+      { text: 'prescribed', class: 'prescribed' }
+    ];
+
+    const cycleText = document.getElementById('cycle-text');
+    let currentIndex = 0;
+
+    if (cycleText) {
+      cycleText.textContent = dietTypes[0].text;
+      cycleText.className = 'cycle-text active ' + dietTypes[0].class;
+
+      setInterval(() => {
+        cycleText.classList.remove('active');
+        
+        setTimeout(() => {
+          currentIndex = (currentIndex + 1) % dietTypes.length;
+          const next = dietTypes[currentIndex];
+          
+          cycleText.textContent = next.text;
+          cycleText.className = 'cycle-text ' + next.class;
+          
+          setTimeout(() => {
+            cycleText.classList.add('active');
+          }, 100);
+        }, 800);
+      }, 5000);
+    }
+  </script>
 
   <!-- Hamburger menu toggle -->
   <script>
