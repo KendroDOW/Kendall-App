@@ -209,7 +209,7 @@ const filename = path.split('/').pop() || '';
 const isHomePage = filename === 'home.html' || filename === 'index.html' || path === '' || path.includes('home');
 const isHistoryPage = filename === 'history.html' || path.includes('history');
 
-// Global attachPhotos function (capture modal)
+// Global attachPhotos (capture modal)
 async function attachPhotos(receiptId) {
   let photos = [];
 
@@ -237,7 +237,6 @@ async function attachPhotos(receiptId) {
 
   modal.style.display = 'flex';
 
-  // Take Photo handler
   const takeHandler = () => {
     input.value = '';
     input.onchange = async (e) => {
@@ -286,7 +285,6 @@ async function attachPhotos(receiptId) {
 
   takeBtn.onclick = takeHandler;
 
-  // Save handler
   saveBtn.onclick = async () => {
     if (photos.length === 0) return alert('No photos to save.');
     try {
@@ -299,7 +297,6 @@ async function attachPhotos(receiptId) {
     }
   };
 
-  // Cancel handler
   cancelBtn.onclick = () => {
     modal.style.display = 'none';
   };
@@ -377,6 +374,7 @@ if (isHomePage) {
   let currentItems = [];
   let currentDate = '';
   let currentLocation = '';
+  let editingId = null; // Track if editing existing receipt
 
   const scanBtn = document.getElementById('barcode-scan-btn');
   const manualBtn = document.getElementById('manual-btn');
@@ -385,8 +383,40 @@ if (isHomePage) {
   const cancelEditBtn = document.getElementById('cancel-edit');
   const itemsContainer = document.getElementById('items-container');
   const editSection = document.getElementById('edit-section');
+  const editTitle = document.getElementById('edit-title');
 
   let barcodeScannerActive = false;
+
+  // Check if editing an existing receipt
+  window.addEventListener('load', async () => {
+    const editIdStr = localStorage.getItem('editReceiptId');
+    if (editIdStr) {
+      editingId = Number(editIdStr);
+      editTitle.textContent = 'Edit Receipt';
+      saveReceiptBtn.textContent = 'Update Receipt';
+
+      try {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const receipt = await store.get(editingId);
+        await tx.done;
+
+        if (receipt) {
+          document.getElementById('receipt-location').value = receipt.location || '';
+          document.getElementById('receipt-date').value = receipt.date || '';
+          currentItems = receipt.items || [];
+          renderItems();
+          updateDeductibles();
+        } else {
+          alert('Receipt not found for editing.');
+          localStorage.removeItem('editReceiptId');
+        }
+      } catch (err) {
+        console.error('Load receipt for edit error:', err);
+        alert('Error loading receipt for edit.');
+      }
+    }
+  });
 
   if (scanBtn) {
     scanBtn.addEventListener('click', async () => {
@@ -689,25 +719,30 @@ if (isHomePage) {
         location: currentLocation || 'Unknown Location',
         items: [...currentItems],
         createdAt: new Date().toISOString(),
-        photos: [],
+        photos: editingId ? (await db.transaction(STORE_NAME).objectStore(STORE_NAME).get(editingId))?.photos || [] : [],
         totalDeductible: totalDeduct
       };
 
       try {
-        const key = await db.put(STORE_NAME, receipt);
-        alert('Receipt saved!');
-
-        if (confirm('Attach photo?')) {
-          attachPhotos(key);
+        if (editingId) {
+          receipt.id = editingId;
+          await db.put(STORE_NAME, receipt);
+          alert('Receipt updated!');
+          localStorage.removeItem('editReceiptId');
+        } else {
+          await db.put(STORE_NAME, receipt);
+          alert('Receipt saved!');
         }
 
         editSection.style.display = 'none';
         itemsContainer.innerHTML = '';
         document.getElementById('barcode-scan-btn').style.display = 'block';
         document.getElementById('manual-btn').style.display = 'block';
+        editTitle.textContent = 'Review & Edit Receipt';
+        saveReceiptBtn.textContent = 'Save Receipt';
       } catch (err) {
-        console.error('Save error:', err);
-        alert('Error saving receipt. Check console.');
+        console.error('Save/Update error:', err);
+        alert('Error saving/updating receipt. Check console.');
       }
     });
   }
@@ -718,6 +753,9 @@ if (isHomePage) {
       itemsContainer.innerHTML = '';
       document.getElementById('barcode-scan-btn').style.display = 'block';
       document.getElementById('manual-btn').style.display = 'block';
+      localStorage.removeItem('editReceiptId');
+      editTitle.textContent = 'Review & Edit Receipt';
+      saveReceiptBtn.textContent = 'Save Receipt';
     });
   }
 }
@@ -753,6 +791,8 @@ if (isHistoryPage) {
         const addIcon = '+';
         const cameraIcon = photoCount > 0 ? '📷' : '';
         const eyeIcon = photoCount > 0 ? '👁️' : '';
+        const editIcon = '🖉';
+        const deleteIcon = '×';
         const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
 
         card.innerHTML = `
@@ -763,6 +803,8 @@ if (isHistoryPage) {
             ${badge}
             ${cameraIcon ? `<span class="photo-icon" title="Add more photos" onclick="event.stopPropagation(); attachPhotos(${r.id})">${cameraIcon}</span>` : ''}
             ${eyeIcon ? `<span class="photo-icon" title="View receipt photos" onclick="event.stopPropagation(); viewPhotos(${r.id})">${eyeIcon}</span>` : ''}
+            <span class="photo-icon" title="Edit receipt" onclick="event.stopPropagation(); editReceipt(${r.id})">${editIcon}</span>
+            <span class="photo-icon" title="Delete receipt" onclick="event.stopPropagation(); deleteReceipt(${r.id})">${deleteIcon}</span>
           </div>
         `;
 
@@ -773,6 +815,25 @@ if (isHistoryPage) {
       console.error('loadLogs error:', err);
       logList.innerHTML = '<p>Error loading history. Check console.</p>';
     }
+  }
+
+  // New: Edit receipt (save ID and redirect to home)
+  function editReceipt(receiptId) {
+    localStorage.setItem('editReceiptId', receiptId);
+    window.location.href = 'home.html';
+  }
+
+  // New: Delete receipt
+  function deleteReceipt(receiptId) {
+    if (!confirm('Are you sure you want to delete this receipt and all its photos?')) return;
+
+    db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).delete(receiptId).then(() => {
+      alert('Receipt deleted.');
+      loadLogs(); // Refresh list
+    }).catch(err => {
+      console.error('Delete error:', err);
+      alert('Error deleting receipt.');
+    });
   }
 
   function showReport(receipt) {
