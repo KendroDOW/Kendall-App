@@ -12,7 +12,7 @@ async function initDB() {
 }
 initDB();
 
-// USDA prices
+// USDA average regular prices (per lb or unit, approximate values)
 const usdaRegularPrices = {
   'oats': 0.55,
   'flour': 0.50,
@@ -297,6 +297,7 @@ async function savePhotos(receiptId, photos) {
   }
 }
 
+// Home page logic
 if (isHomePage) {
   let currentItems = [];
   let currentDate = '';
