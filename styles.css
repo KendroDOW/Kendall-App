@@ -14,14 +14,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Center content */
-header, main, footer, .hero, .learn-page {
-  max-width: 100%;
-  margin: 0 auto;
-  padding: 0 16px;
-}
-
-/* Navigation - centered links, Log Out on right */
+/* Navigation */
 #top-nav {
   display: flex;
   align-items: center;
@@ -141,7 +134,7 @@ header, main, footer, .hero, .learn-page {
   }
 }
 
-/* Hero with cycling tagline */
+/* Hero */
 .hero {
   text-align: center;
   padding: 50px 16px 40px;
@@ -197,7 +190,7 @@ header, main, footer, .hero, .learn-page {
   transform: translateY(0);
 }
 
-/* Hero buttons - stack by default */
+/* Hero buttons */
 .hero-buttons {
   display: flex;
   flex-direction: column;
@@ -231,6 +224,66 @@ header, main, footer, .hero, .learn-page {
 }
 
 .secondary:hover { background: #f1f5f9; }
+
+/* Full-screen barcode preview */
+#barcode-preview-container {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+#barcode-preview-container h3 {
+  margin: 16px 0 8px;
+  font-size: 1.4rem;
+}
+
+#barcode-preview-container p {
+  margin-bottom: 16px;
+  max-width: 90%;
+  text-align: center;
+}
+
+#barcode-video-container {
+  position: relative;
+  width: 90%;
+  max-width: 480px;
+  aspect-ratio: 4/3;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#barcode-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#barcode-guide {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 80%;
+  height: 40%;
+  border: 4px dashed #ff0000;
+  border-radius: 12px;
+  pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+}
+
+#stop-barcode-scan {
+  margin-top: 24px;
+  width: 90%;
+  max-width: 320px;
+  padding: 14px;
+  font-size: 1.1rem;
+}
 
 /* Slideshow container */
 .slideshow-container {
@@ -267,35 +320,7 @@ header, main, footer, .hero, .learn-page {
   flex-shrink: 0;
 }
 
-.slide h2 {
-  font-size: 1.6rem;
-  margin-bottom: 16px;
-  color: #1e293b;
-}
-
-.slide p {
-  font-size: 1rem;
-  margin-bottom: 24px;
-  color: #475569;
-  max-width: 90%;
-}
-
-.slide button {
-  background: #1976d2;
-  color: white;
-  border: none;
-  padding: 12px 32px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.slide button:hover {
-  background: #1565c0;
-}
-
-/* Side arrows - centered vertically on left/right edges */
+/* Side arrows - on edges, vertically centered */
 .arrow {
   position: absolute;
   top: 50%;
@@ -461,117 +486,6 @@ h2 {
 #deductible-summary strong {
   font-size: 1.2rem;
   color: #1976d2;
-}
-
-/* Receipt Box (History) icons */
-.history-card {
-  position: relative;
-}
-
-.history-card .photo-icon {
-  cursor: pointer;
-  font-size: 1.6rem;
-  margin-left: 8px;
-  vertical-align: middle;
-}
-
-.history-card .photo-badge {
-  background: #1976d2;
-  color: white;
-  border-radius: 50%;
-  padding: 2px 8px;
-  font-size: 0.8rem;
-  margin-left: 4px;
-  vertical-align: middle;
-}
-
-/* Photo modal */
-#photo-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.8);
-  z-index: 200;
-  align-items: center;
-  justify-content: center;
-}
-
-#photo-modal .modal-content {
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 85%;
-  overflow-y: auto;
-  position: relative;
-}
-
-#photo-modal .close-btn {
-  position: absolute;
-  top: 8px;
-  right: 16px;
-  background: none;
-  border: none;
-  font-size: 2.5rem;
-  cursor: pointer;
-  color: #333;
-}
-
-#photo-gallery {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  justify-content: center;
-}
-
-#photo-gallery img {
-  max-width: 100%;
-  max-height: 400px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-/* Learn page specific */
-.learn-page {
-  padding-top: 80px;
-}
-
-.learn-hero h1.centered {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.learn-page section {
-  margin-bottom: 64px;
-}
-
-.learn-page p {
-  margin-bottom: 32px;
-}
-
-.disclaimer-section {
-  margin-top: 80px;
-  padding: 32px;
-  background: #f8f9fa;
-  border-radius: 12px;
-}
-
-.disclaimer-small {
-  font-size: 0.9rem;
-  line-height: 1.6;
-  color: #666;
-  font-weight: 400;
-}
-
-.learn-link {
-  color: #1976d2;
-  font-weight: 600;
-  text-decoration: underline;
-}
-
-.learn-link:hover {
-  color: #1565c0;
 }
 
 /* Footer */
