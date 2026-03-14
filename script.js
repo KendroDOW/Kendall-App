@@ -213,12 +213,9 @@ const isHistoryPage = filename === 'history.html' || path.includes('history');
 async function attachPhotos(receiptId) {
   let photos = [];
 
-  function openCamera() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment';
+  const input = document.getElementById('hidden-camera-input');
 
+  function openCamera() {
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -247,18 +244,20 @@ async function attachPhotos(receiptId) {
         if (photos.length >= 3) {
           await savePhotos(receiptId, photos);
           alert('Photos added!');
+          input.value = ''; // Clear input for next use
         } else {
           if (confirm(`Photo ${photos.length} added. Add another? (max 3)`)) {
-            openCamera();
+            input.click();
           } else {
             await savePhotos(receiptId, photos);
             alert('Photos added!');
+            input.value = '';
           }
         }
       }, 'image/jpeg', 0.8);
     };
 
-    input.click();
+    input.click(); // This is called directly from user tap → allowed
   }
 
   openCamera();
