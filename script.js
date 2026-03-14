@@ -200,7 +200,7 @@ document.getElementById('logout-btn')?.addEventListener('click', () => {
     localStorage.removeItem('deductEatsLoggedIn');
     window.location.href = 'welcome.html';
   }
-}
+});
 
 // Page detection
 const path = window.location.pathname.toLowerCase().replace(/\/$/, '');
@@ -725,7 +725,7 @@ if (isHistoryPage) {
         const photoCount = r.photos ? r.photos.length : 0;
         const addIcon = '+';
         const cameraIcon = photoCount > 0 ? '📷' : '';
-        const eyeIcon = '👁️';  // Always visible for testing
+        const eyeIcon = '👁️'; // Always visible for testing
         const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
 
         card.innerHTML = `
