@@ -209,7 +209,7 @@ const filename = path.split('/').pop() || '';
 const isHomePage = filename === 'home.html' || filename === 'index.html' || path === '' || path.includes('home');
 const isHistoryPage = filename === 'history.html' || path.includes('history');
 
-// Global attachPhotos function
+// Global attachPhotos (capture modal)
 async function attachPhotos(receiptId) {
   let photos = [];
 
@@ -309,6 +309,43 @@ async function attachPhotos(receiptId) {
   cancelBtn.onclick = () => {
     modal.style.display = 'none';
   };
+}
+
+// New: View existing photos
+async function viewPhotos(receiptId) {
+  const modal = document.getElementById('photo-viewer-modal');
+  const gallery = document.getElementById('viewer-gallery');
+  gallery.innerHTML = '';
+
+  if (!modal) {
+    console.error('Viewer modal not found');
+    alert('Viewer not available.');
+    return;
+  }
+
+  try {
+    const receipt = await db.transaction(STORE_NAME).objectStore(STORE_NAME).get(receiptId);
+    if (!receipt || !receipt.photos || receipt.photos.length === 0) {
+      alert('No photos found for this receipt.');
+      return;
+    }
+
+    receipt.photos.forEach((blob) => {
+      const url = URL.createObjectURL(blob);
+      const img = document.createElement('img');
+      img.src = url;
+      img.style.maxWidth = '200px';
+      img.style.margin = '8px';
+      img.style.borderRadius = '8px';
+      img.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+      gallery.appendChild(img);
+    });
+
+    modal.style.display = 'flex';
+  } catch (err) {
+    console.error('View photos error:', err);
+    alert('Error loading photos.');
+  }
 }
 
 async function savePhotos(receiptId, photos) {
@@ -723,14 +760,17 @@ if (isHistoryPage) {
         card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
 
         const photoCount = r.photos ? r.photos.length : 0;
-        const icon = photoCount > 0 ? '📷' : '+';
+        const addIcon = '+';
+        const viewIcon = photoCount > 0 ? '👁️' : '';
         const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
 
         card.innerHTML = `
           <strong>${r.location || 'Unknown Location'} - ${r.date}</strong><br>
           <small>${r.items.length} item(s) • Deductible: $${r.totalDeductible?.toFixed(2) || '0.00'}</small>
-          <div style="margin-top:8px; cursor:pointer;" onclick="event.stopPropagation(); attachPhotos(${r.id})">
-            ${icon} ${badge} <span style="font-size:0.8rem;color:#666;">(${photoCount > 0 ? 'View photos' : 'Add photo'})</span>
+          <div style="margin-top:8px; cursor:pointer;">
+            <span class="photo-icon" title="${photoCount > 0 ? 'Add more photos' : 'Add receipt photo'}" onclick="event.stopPropagation(); attachPhotos(${r.id})">${addIcon}</span>
+            ${badge}
+            ${viewIcon ? `<span class="photo-icon" title="View receipt photos" onclick="event.stopPropagation(); viewPhotos(${r.id})">${viewIcon}</span>` : ''}
           </div>
         `;
 
