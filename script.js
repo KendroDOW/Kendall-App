@@ -209,6 +209,70 @@ const filename = path.split('/').pop() || '';
 const isHomePage = filename === 'home.html' || filename === 'index.html' || path === '' || path.includes('home');
 const isHistoryPage = filename === 'history.html' || path.includes('history');
 
+// Global attachPhotos function (moved outside isHomePage so history can use it)
+async function attachPhotos(receiptId) {
+  let photos = [];
+
+  function openCamera() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Compress image
+      const img = await createImageBitmap(file);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const maxSize = 1024;
+      let w = img.width;
+      let h = img.height;
+
+      if (w > h) {
+        if (w > maxSize) { h *= maxSize / w; w = maxSize; }
+      } else {
+        if (h > maxSize) { w *= maxSize / h; h = maxSize; }
+      }
+
+      canvas.width = w;
+      canvas.height = h;
+      ctx.drawImage(img, 0, 0, w, h);
+
+      canvas.toBlob(async (blob) => {
+        photos.push(blob);
+
+        if (photos.length >= 3) {
+          await savePhotos(receiptId, photos);
+          alert('Photos added!');
+        } else {
+          if (confirm(`Photo ${photos.length} added. Add another? (max 3)`)) {
+            openCamera();
+          } else {
+            await savePhotos(receiptId, photos);
+            alert('Photos added!');
+          }
+        }
+      }, 'image/jpeg', 0.8);
+    };
+
+    input.click();
+  }
+
+  openCamera();
+}
+
+async function savePhotos(receiptId, photos) {
+  const tx = db.transaction(STORE_NAME, 'readwrite');
+  const store = tx.objectStore(STORE_NAME);
+  const receipt = await store.get(receiptId);
+  receipt.photos = receipt.photos ? receipt.photos.concat(photos) : photos;
+  await store.put(receipt);
+  await tx.done;
+}
+
 if (isHomePage) {
   let currentItems = [];
   let currentDate = '';
@@ -444,7 +508,7 @@ if (isHomePage) {
     });
   }
 
-  // Deductible calculation
+  // Deductible calculation (fixed: price is total, not per lb)
   function updateDeductibles() {
     let totalDeduct = 0;
     let hasDeductible = false;
@@ -456,7 +520,7 @@ if (isHomePage) {
         if (item.quantity) {
           const qtyInLb = convertToLb(item.quantity);
           if (qtyInLb > 0) {
-            const specialtyTotal = (item.price || 0) * qtyInLb;
+            const specialtyTotal = item.price || 0; // total price, not per lb
             const regularTotal = item.regularPrice * qtyInLb;
             deduct = specialtyTotal - regularTotal;
           } else {
@@ -497,7 +561,7 @@ if (isHomePage) {
     });
   }
 
-  // Save receipt - updated to prompt for photo
+  // Save receipt - updated to prompt for photo and save totalDeductible
   if (saveReceiptBtn) {
     saveReceiptBtn.addEventListener('click', async () => {
       currentDate = document.getElementById('receipt-date').value;
@@ -505,12 +569,34 @@ if (isHomePage) {
 
       if (currentItems.length === 0) return alert('No items to save.');
 
+      // Calculate total deductible before saving
+      let totalDeduct = 0;
+      currentItems.forEach(item => {
+        if (item.regularPrice > 0) {
+          let deduct = 0;
+          if (item.quantity) {
+            const qtyInLb = convertToLb(item.quantity);
+            if (qtyInLb > 0) {
+              const specialtyTotal = item.price || 0;
+              const regularTotal = item.regularPrice * qtyInLb;
+              deduct = specialtyTotal - regularTotal;
+            } else {
+              deduct = (item.price || 0) - item.regularPrice;
+            }
+          } else {
+            deduct = (item.price || 0) - item.regularPrice;
+          }
+          totalDeduct += deduct > 0 ? deduct : 0;
+        }
+      });
+
       const receipt = {
         date: currentDate || new Date().toISOString().split('T')[0],
         location: currentLocation || 'Unknown Location',
         items: [...currentItems],
         createdAt: new Date().toISOString(),
-        photos: []  // Will store image blobs
+        photos: [],
+        totalDeductible: totalDeduct // Save the total
       };
 
       try {
@@ -531,70 +617,6 @@ if (isHomePage) {
         alert('Error saving receipt. Check console.');
       }
     });
-  }
-
-  // Attach photos to receipt
-  async function attachPhotos(receiptId) {
-    let photos = [];
-
-    function openCamera() {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.capture = 'environment';
-
-      input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        // Compress image
-        const img = await createImageBitmap(file);
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const maxSize = 1024;
-        let w = img.width;
-        let h = img.height;
-
-        if (w > h) {
-          if (w > maxSize) { h *= maxSize / w; w = maxSize; }
-        } else {
-          if (h > maxSize) { w *= maxSize / h; h = maxSize; }
-        }
-
-        canvas.width = w;
-        canvas.height = h;
-        ctx.drawImage(img, 0, 0, w, h);
-
-        canvas.toBlob(async (blob) => {
-          photos.push(blob);
-
-          if (photos.length >= 3) {
-            await savePhotos(receiptId, photos);
-            alert('Photos added!');
-          } else {
-            if (confirm(`Photo ${photos.length} added. Add another? (max 3)`)) {
-              openCamera();
-            } else {
-              await savePhotos(receiptId, photos);
-              alert('Photos added!');
-            }
-          }
-        }, 'image/jpeg', 0.8);
-      };
-
-      input.click();
-    }
-
-    openCamera();
-  }
-
-  async function savePhotos(receiptId, photos) {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const receipt = await store.get(receiptId);
-    receipt.photos = receipt.photos ? receipt.photos.concat(photos) : photos;
-    await store.put(receipt);
-    await tx.done;
   }
 
   // Cancel edit
