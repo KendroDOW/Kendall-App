@@ -209,7 +209,7 @@ const filename = path.split('/').pop() || '';
 const isHomePage = filename === 'home.html' || filename === 'index.html' || path === '' || path.includes('home');
 const isHistoryPage = filename === 'history.html' || path.includes('history');
 
-// Global attachPhotos function
+// Global attachPhotos function (capture modal)
 async function attachPhotos(receiptId) {
   let photos = [];
 
@@ -351,15 +351,58 @@ async function viewPhotos(receiptId) {
       return;
     }
 
-    receipt.photos.forEach((dataUrl) => {
+    receipt.photos.forEach((dataUrl, index) => {
+      const container = document.createElement('div');
+      container.style.position = 'relative';
+      container.style.margin = '8px';
+
       const img = document.createElement('img');
       img.src = dataUrl;
       img.style.maxWidth = '200px';
-      img.style.margin = '8px';
       img.style.borderRadius = '8px';
       img.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
-      gallery.appendChild(img);
+      img.onerror = () => {
+        img.src = 'https://via.placeholder.com/200?text=Broken+Photo';
+      };
+      container.appendChild(img);
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = index;
+      checkbox.style.position = 'absolute';
+      checkbox.style.top = '8px';
+      checkbox.style.right = '8px';
+      checkbox.style.width = '20px';
+      checkbox.style.height = '20px';
+      container.appendChild(checkbox);
+
+      gallery.appendChild(container);
     });
+
+    // Add Delete Selected button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Delete Selected';
+    deleteBtn.style.marginTop = '16px';
+    deleteBtn.style.padding = '10px 20px';
+    deleteBtn.style.background = '#d32f2f';
+    deleteBtn.style.color = 'white';
+    deleteBtn.style.border = 'none';
+    deleteBtn.style.borderRadius = '8px';
+    deleteBtn.style.cursor = 'pointer';
+    deleteBtn.onclick = async () => {
+      const selected = gallery.querySelectorAll('input[type="checkbox"]:checked');
+      if (selected.length === 0) return alert('No photos selected.');
+      if (!confirm(`Delete ${selected.length} selected photo(s)?`)) return;
+
+      const indices = Array.from(selected).map(cb => Number(cb.value)).sort((a,b) => b-a);
+      const receipt = await db.transaction(STORE_NAME).objectStore(STORE_NAME).get(receiptId);
+      receipt.photos = receipt.photos.filter((_, i) => !indices.includes(i));
+      await savePhotos(receiptId, receipt.photos);
+      alert('Selected photos deleted.');
+      modal.style.display = 'none';
+      loadLogs(); // Refresh list
+    };
+    gallery.appendChild(deleteBtn);
 
     modal.style.display = 'flex';
   } catch (err) {
@@ -374,6 +417,7 @@ if (isHomePage) {
   let currentItems = [];
   let currentDate = '';
   let currentLocation = '';
+  let editingId = null; // Track if editing existing receipt
 
   const scanBtn = document.getElementById('barcode-scan-btn');
   const manualBtn = document.getElementById('manual-btn');
@@ -382,8 +426,40 @@ if (isHomePage) {
   const cancelEditBtn = document.getElementById('cancel-edit');
   const itemsContainer = document.getElementById('items-container');
   const editSection = document.getElementById('edit-section');
+  const editTitle = document.getElementById('edit-title');
 
   let barcodeScannerActive = false;
+
+  // Check if editing an existing receipt
+  window.addEventListener('load', async () => {
+    const editIdStr = localStorage.getItem('editReceiptId');
+    if (editIdStr) {
+      editingId = Number(editIdStr);
+      editTitle.textContent = 'Edit Receipt';
+      saveReceiptBtn.textContent = 'Update Receipt';
+
+      try {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const receipt = await store.get(editingId);
+        await tx.done;
+
+        if (receipt) {
+          document.getElementById('receipt-location').value = receipt.location || '';
+          document.getElementById('receipt-date').value = receipt.date || '';
+          currentItems = receipt.items || [];
+          renderItems();
+          updateDeductibles();
+        } else {
+          alert('Receipt not found for editing.');
+          localStorage.removeItem('editReceiptId');
+        }
+      } catch (err) {
+        console.error('Load receipt for edit error:', err);
+        alert('Error loading receipt for edit.');
+      }
+    }
+  });
 
   if (scanBtn) {
     scanBtn.addEventListener('click', async () => {
@@ -391,7 +467,6 @@ if (isHomePage) {
       previewContainer.style.display = 'flex';
       barcodeScannerActive = true;
 
-      // Hide nav bar during scan
       const mainNav = document.getElementById('top-nav');
       if (mainNav) mainNav.style.display = 'none';
 
@@ -552,7 +627,6 @@ if (isHomePage) {
       itemsContainer.appendChild(block);
     });
 
-    // Live updates on input
     itemsContainer.addEventListener('input', (e) => {
       const el = e.target;
       const idx = el.dataset.index;
@@ -605,7 +679,6 @@ if (isHomePage) {
     });
   }
 
-  // Deductible calculation (fixed: price is total, not per lb)
   function updateDeductibles() {
     let totalDeduct = 0;
     let hasDeductible = false;
@@ -617,7 +690,7 @@ if (isHomePage) {
         if (item.quantity) {
           const qtyInLb = convertToLb(item.quantity);
           if (qtyInLb > 0) {
-            const specialtyTotal = item.price || 0; // total price, not per lb
+            const specialtyTotal = item.price || 0;
             const regularTotal = item.regularPrice * qtyInLb;
             deduct = specialtyTotal - regularTotal;
           } else {
@@ -664,7 +737,6 @@ if (isHomePage) {
 
       if (currentItems.length === 0) return alert('No items to save.');
 
-      // Calculate total deductible before saving
       let totalDeduct = 0;
       currentItems.forEach(item => {
         if (item.regularPrice > 0) {
@@ -690,37 +762,45 @@ if (isHomePage) {
         location: currentLocation || 'Unknown Location',
         items: [...currentItems],
         createdAt: new Date().toISOString(),
-        photos: [],
-        totalDeductible: totalDeduct // Save the total
+        photos: editingId ? (await db.transaction(STORE_NAME).objectStore(STORE_NAME).get(editingId))?.photos || [] : [],
+        totalDeductible: totalDeduct
       };
 
       try {
-        const key = await db.put(STORE_NAME, receipt);
-        alert('Receipt saved!');
-
-        // Prompt to attach photo
-        if (confirm('Attach photo?')) {
-          attachPhotos(key);
+        if (editingId) {
+          receipt.id = editingId;
+          await db.put(STORE_NAME, receipt);
+          alert('Receipt updated!');
+          localStorage.removeItem('editReceiptId');
+        } else {
+          await db.put(STORE_NAME, receipt);
+          alert('Receipt saved!');
         }
 
         editSection.style.display = 'none';
         itemsContainer.innerHTML = '';
         document.getElementById('barcode-scan-btn').style.display = 'block';
         document.getElementById('manual-btn').style.display = 'block';
+        editTitle.textContent = 'Review & Edit Receipt';
+        saveReceiptBtn.textContent = 'Save Receipt';
+        editingId = null;
       } catch (err) {
-        console.error('Save error:', err);
-        alert('Error saving receipt. Check console.');
+        console.error('Save/Update error:', err);
+        alert('Error saving/updating receipt. Check console.');
       }
     });
   }
 
-  // Cancel edit
   if (cancelEditBtn) {
     cancelEditBtn.addEventListener('click', () => {
       editSection.style.display = 'none';
       itemsContainer.innerHTML = '';
       document.getElementById('barcode-scan-btn').style.display = 'block';
       document.getElementById('manual-btn').style.display = 'block';
+      localStorage.removeItem('editReceiptId');
+      editTitle.textContent = 'Review & Edit Receipt';
+      saveReceiptBtn.textContent = 'Save Receipt';
+      editingId = null;
     });
   }
 }
@@ -755,7 +835,9 @@ if (isHistoryPage) {
         const photoCount = r.photos ? r.photos.length : 0;
         const addIcon = '+';
         const cameraIcon = photoCount > 0 ? '📷' : '';
-        const eyeIcon = '👁️'; // Always visible for testing
+        const eyeIcon = photoCount > 0 ? '👁️' : '';
+        const editIcon = '✏️'; // Reliable pencil emoji
+        const deleteIcon = '×';
         const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
 
         card.innerHTML = `
@@ -765,7 +847,9 @@ if (isHistoryPage) {
             <span class="photo-icon" title="Add receipt photo" onclick="event.stopPropagation(); attachPhotos(${r.id})">${addIcon}</span>
             ${badge}
             ${cameraIcon ? `<span class="photo-icon" title="Add more photos" onclick="event.stopPropagation(); attachPhotos(${r.id})">${cameraIcon}</span>` : ''}
-            <span class="photo-icon" title="View photos (test mode)" onclick="event.stopPropagation(); alert('View photos coming soon!')">${eyeIcon}</span>
+            ${eyeIcon ? `<span class="photo-icon" title="View receipt photos" onclick="event.stopPropagation(); viewPhotos(${r.id})">${eyeIcon}</span>` : ''}
+            <span class="photo-icon" title="Edit receipt" onclick="event.stopPropagation(); editReceipt(${r.id})">${editIcon}</span>
+            <span class="photo-icon" title="Delete receipt" onclick="event.stopPropagation(); deleteReceipt(${r.id})">${deleteIcon}</span>
           </div>
         `;
 
@@ -776,6 +860,25 @@ if (isHistoryPage) {
       console.error('loadLogs error:', err);
       logList.innerHTML = '<p>Error loading history. Check console.</p>';
     }
+  }
+
+  // Edit receipt (save ID and redirect to home)
+  function editReceipt(receiptId) {
+    localStorage.setItem('editReceiptId', receiptId);
+    window.location.href = 'home.html';
+  }
+
+  // Delete receipt
+  function deleteReceipt(receiptId) {
+    if (!confirm('Are you sure you want to delete this receipt and all its photos?')) return;
+
+    db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).delete(receiptId).then(() => {
+      alert('Receipt deleted.');
+      loadLogs(); // Refresh list
+    }).catch(err => {
+      console.error('Delete error:', err);
+      alert('Error deleting receipt.');
+    });
   }
 
   function showReport(receipt) {
