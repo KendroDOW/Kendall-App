@@ -209,79 +209,112 @@ const filename = path.split('/').pop() || '';
 const isHomePage = filename === 'home.html' || filename === 'index.html' || path === '' || path.includes('home');
 const isHistoryPage = filename === 'history.html' || path.includes('history');
 
-// Global attachPhotos function
+// Global attachPhotos function (with custom modal)
 async function attachPhotos(receiptId) {
   let photos = [];
 
+  const modal = document.getElementById('photo-capture-modal');
+  const preview = document.getElementById('photo-preview');
+  const status = document.getElementById('photo-status');
+  const takeBtn = document.getElementById('take-photo-btn');
+  const saveBtn = document.getElementById('save-photos-btn');
+  const cancelBtn = document.getElementById('cancel-photos-btn');
   const input = document.getElementById('hidden-camera-input');
-  if (!input) {
-    console.error('Hidden camera input not found');
-    alert('Camera input not available.');
+
+  if (!modal || !input) {
+    console.error('Photo modal or input missing');
+    alert('Photo capture not available.');
     return;
   }
 
-  function openCamera() {
-    input.value = ''; // Clear previous selection
+  // Reset state
+  photos = [];
+  preview.innerHTML = '<p style="color:#666;">No photo yet</p>';
+  status.textContent = 'Take a photo of your receipt (up to 3)';
+  saveBtn.disabled = true;
+  takeBtn.disabled = false;
+  takeBtn.textContent = 'Take Photo';
+
+  modal.style.display = 'flex';
+
+  // Take Photo handler
+  const takeHandler = () => {
+    input.value = '';
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
-      console.log('Photo selected, size:', file.size);
+      console.log('Photo file selected, size:', file.size);
 
-      // Compress image
-      const img = await createImageBitmap(file);
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const maxSize = 1024;
-      let w = img.width;
-      let h = img.height;
+      try {
+        const img = await createImageBitmap(file);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const maxSize = 1024;
+        let w = img.width;
+        let h = img.height;
 
-      if (w > h) {
-        if (w > maxSize) { h *= maxSize / w; w = maxSize; }
-      } else {
-        if (h > maxSize) { w *= maxSize / h; h = maxSize; }
-      }
-
-      canvas.width = w;
-      canvas.height = h;
-      ctx.drawImage(img, 0, 0, w, h);
-
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          console.error('Blob creation failed');
-          alert('Failed to process photo.');
-          return;
-        }
-        photos.push(blob);
-        console.log('Photo processed, total:', photos.length);
-
-        if (photos.length >= 3) {
-          await savePhotos(receiptId, photos);
-          alert('Photos saved!');
-          input.value = '';
+        if (w > h) {
+          if (w > maxSize) { h *= maxSize / w; w = maxSize; }
         } else {
-          if (confirm(`Photo ${photos.length} added. Add another? (max 3)`)) {
-            input.click();
-          } else {
-            await savePhotos(receiptId, photos);
-            alert('Photos saved!');
-            input.value = '';
-          }
+          if (h > maxSize) { w *= maxSize / h; h = maxSize; }
         }
-      }, 'image/jpeg', 0.8);
+
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            console.error('Blob creation failed');
+            alert('Failed to process photo.');
+            return;
+          }
+          photos.push(blob);
+          const url = URL.createObjectURL(blob);
+          preview.innerHTML = `<img src="${url}" style="max-width:100%; max-height:180px; border-radius:8px;">`;
+          status.textContent = `Photo ${photos.length} added (up to 3)`;
+          saveBtn.disabled = false;
+
+          if (photos.length >= 3) {
+            takeBtn.disabled = true;
+            takeBtn.textContent = 'Max reached';
+          }
+        }, 'image/jpeg', 0.8);
+      } catch (err) {
+        console.error('Photo processing error:', err);
+        alert('Error processing photo.');
+      }
     };
 
     input.click();
-  }
+  };
 
-  openCamera();
+  takeBtn.onclick = takeHandler;
+
+  // Save handler
+  saveBtn.onclick = async () => {
+    if (photos.length === 0) return alert('No photos to save.');
+    try {
+      await savePhotos(receiptId, photos);
+      alert('Photos saved successfully!');
+      modal.style.display = 'none';
+    } catch (err) {
+      console.error('Save failed:', err);
+      alert('Error saving photos.');
+    }
+  };
+
+  // Cancel handler
+  cancelBtn.onclick = () => {
+    modal.style.display = 'none';
+  };
 }
 
 async function savePhotos(receiptId, photos) {
   try {
     console.log('Saving photos for receipt ID:', receiptId);
-    console.log('Number of photos to save:', photos.length);
-    console.log('Photo sizes:', photos.map(p => p.size));
+    console.log('Number of photos:', photos.length);
 
     const tx = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
