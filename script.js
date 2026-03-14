@@ -722,21 +722,21 @@ if (isHistoryPage) {
       card.style.marginBottom = '12px';
       card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
 
-      const photoCount = r.photos ? r.photos.length : 0;
-      const addIcon = '+';
-      const cameraIcon = photoCount > 0 ? '👁️' : '';
-      const eyeIcon = '👁️';  // Force visible for testing
-      const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
+  const photoCount = r.photos ? r.photos.length : 0;
+const addIcon = '+';
+const cameraIcon = photoCount > 0 ? '📷' : ''; // Camera for add more
+const eyeIcon = photoCount > 0 ? '👁️' : '';   // Eye only when photos exist
+const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
 
       card.innerHTML = `
         <strong>${r.location || 'Unknown Location'} - ${r.date}</strong><br>
         <small>${r.items.length} item(s) • Deductible: $${r.totalDeductible?.toFixed(2) || '0.00'}</small>
         <div style="margin-top:8px; cursor:pointer;">
-          <span class="photo-icon" title="Add receipt photo" onclick="event.stopPropagation(); attachPhotos(${r.id})">${addIcon}</span>
-          ${badge}
-          ${cameraIcon ? `<span class="photo-icon" title="Add more photos" onclick="event.stopPropagation(); attachPhotos(${r.id})">${cameraIcon}</span>` : ''}
-          <span class="photo-icon" title="View photos (test mode)" onclick="event.stopPropagation(); alert('View photos coming soon!')">${eyeIcon}</span>
-        </div>
+  <span class="photo-icon" title="Add receipt photo" onclick="event.stopPropagation(); attachPhotos(${r.id})">${addIcon}</span>
+  ${badge}
+  ${cameraIcon ? `<span class="photo-icon" title="Add more photos" onclick="event.stopPropagation(); attachPhotos(${r.id})">${cameraIcon}</span>` : ''}
+  ${eyeIcon ? `<span class="photo-icon" title="View photos (test mode)" onclick="event.stopPropagation(); alert('View photos coming soon!')">${eyeIcon}</span>` : ''}
+</div>
       `;
 
       card.addEventListener('click', () => showReport(r));
