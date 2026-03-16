@@ -65,6 +65,9 @@
           <span class="camera-icon">📷</span> Scan Barcode
         </button>
         <button id="manual-btn" class="secondary">Manually Add Receipt</button>
+        <button id="quick-add-btn" class="secondary" style="margin-top:12px;">
+  Quick Add from My List
+</button>
       </div>
     </div>
 
@@ -348,3 +351,8 @@
 </script>
 </body>
 </html>
+<script>
+  document.getElementById('quick-add-btn')?.addEventListener('click', () => {
+    window.location.href = 'mylist.html';
+  });
+</script>
