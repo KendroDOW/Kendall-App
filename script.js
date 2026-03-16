@@ -816,6 +816,7 @@ if (isHistoryPage) {
 
 // New: Calculate total deductible for current tax year (Apr 15 – Apr 14)
 function calculateTaxYearTotal(allReceipts) {
+  window.calculateTaxYearTotal = calculateTaxYearTotal;
   const today = new Date();
   let taxYearStart, taxYearEnd;
 
