@@ -419,6 +419,11 @@ if (isHomePage) {
   let currentLocation = '';
   let editingId = null; // Track if editing existing receipt
 
+  // Make these accessible from home.html script
+window.currentItems = currentItems;
+window.renderItems = renderItems;
+window.updateDeductibles = updateDeductibles;
+
   const scanBtn = document.getElementById('barcode-scan-btn');
   const manualBtn = document.getElementById('manual-btn');
   const addItemBtn = document.getElementById('add-item-btn');
