@@ -76,20 +76,20 @@
     </div>
 
     <!-- Sorting Dropdown (single button with menu) -->
-    <div style="margin: 20px 0; text-align: center;">
-      <div style="position: relative; display: inline-block;">
-        <button id="sort-btn" class="primary" onclick="toggleSortMenu()" style="padding: 12px 24px; font-size: 1.1rem;">
-          Sort ▼
-        </button>
-        <div id="sort-menu" style="display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 180px; z-index: 10; overflow: hidden;">
-          <button onclick="loadLogs('newest'); toggleSortMenu()" style="display: block; width: 100%; padding: 12px; text-align: left; background: none; border: none; cursor: pointer;">Newest First</button>
-          <button onclick="loadLogs('oldest'); toggleSortMenu()" style="display: block; width: 100%; padding: 12px; text-align: left; background: none; border: none; cursor: pointer;">Oldest First</button>
-          <button onclick="loadLogs('highest'); toggleSortMenu()" style="display: block; width: 100%; padding: 12px; text-align: left; background: none; border: none; cursor: pointer;">Highest Deductible</button>
-          <button onclick="loadLogs('lowest'); toggleSortMenu()" style="display: block; width: 100%; padding: 12px; text-align: left; background: none; border: none; cursor: pointer;">Lowest Deductible</button>
-        </div>
-      </div>
+   <!-- Sorting Dropdown – moved to left side -->
+<div style="margin: 20px 0; text-align: left;">
+  <div style="position: relative; display: inline-block;">
+    <button id="sort-btn" class="primary" onclick="toggleSortMenu()" style="padding: 12px 24px; font-size: 1.1rem;">
+      Sort ▼
+    </button>
+    <div id="sort-menu" style="display: none; position: absolute; top: 100%; left: 0; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 180px; z-index: 10; overflow: hidden;">
+      <button onclick="loadLogs('newest'); toggleSortMenu()" style="display: block; width: 100%; padding: 12px; text-align: left; background: none; border: none; cursor: pointer;">Newest First</button>
+      <button onclick="loadLogs('oldest'); toggleSortMenu()" style="display: block; width: 100%; padding: 12px; text-align: left; background: none; border: none; cursor: pointer;">Oldest First</button>
+      <button onclick="loadLogs('highest'); toggleSortMenu()" style="display: block; width: 100%; padding: 12px; text-align: left; background: none; border: none; cursor: pointer;">Highest Deductible</button>
+      <button onclick="loadLogs('lowest'); toggleSortMenu()" style="display: block; width: 100%; padding: 12px; text-align: left; background: none; border: none; cursor: pointer;">Lowest Deductible</button>
     </div>
-
+  </div>
+</div>
     <div id="log-list"></div>
 
     <!-- Tax Year Total Deductible -->
