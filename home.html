@@ -188,87 +188,105 @@
   <!-- Hidden camera input -->
   <input type="file" id="hidden-camera-input" accept="image/*" capture="environment" style="display:none;">
 
-  <!-- Edit pre-fill logic (new) -->
-  <script>
-    // Check if we're editing an existing receipt
-    window.addEventListener('load', async () => {
-      const editId = localStorage.getItem('editReceiptId');
-      if (editId) {
-        document.getElementById('edit-title').textContent = 'Edit Receipt';
-        document.getElementById('save-receipt').textContent = 'Update Receipt';
+ <!-- Edit pre-fill logic (fixed timing) -->
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const editIdStr = localStorage.getItem('editReceiptId');
+    if (!editIdStr) return;
+
+    const editId = Number(editIdStr);
+    const editTitle = document.getElementById('edit-title');
+    const saveReceiptBtn = document.getElementById('save-receipt');
+
+    if (!editTitle || !saveReceiptBtn) {
+      console.error('Edit title or save button not found');
+      alert('Edit UI elements not found.');
+      localStorage.removeItem('editReceiptId');
+      return;
+    }
+
+    editTitle.textContent = 'Edit Receipt';
+    saveReceiptBtn.textContent = 'Update Receipt';
+
+    try {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const receipt = await store.get(editId);
+      await tx.done;
+
+      if (receipt) {
+        document.getElementById('receipt-location').value = receipt.location || '';
+        document.getElementById('receipt-date').value = receipt.date || '';
+        currentItems = receipt.items || [];
+        renderItems();
+        updateDeductibles();
+      } else {
+        alert('Receipt not found for editing.');
+        localStorage.removeItem('editReceiptId');
+        editTitle.textContent = 'Review & Edit Receipt';
+        saveReceiptBtn.textContent = 'Save Receipt';
+        return;
+      }
+
+      // Override save to update existing receipt
+      saveReceiptBtn.onclick = async () => {
+        currentDate = document.getElementById('receipt-date').value;
+        currentLocation = document.getElementById('receipt-location').value;
+
+        if (currentItems.length === 0) return alert('No items to save.');
+
+        let totalDeduct = 0;
+        currentItems.forEach(item => {
+          if (item.regularPrice > 0) {
+            let deduct = 0;
+            if (item.quantity) {
+              const qtyInLb = convertToLb(item.quantity);
+              if (qtyInLb > 0) {
+                const specialtyTotal = item.price || 0;
+                const regularTotal = item.regularPrice * qtyInLb;
+                deduct = specialtyTotal - regularTotal;
+              } else {
+                deduct = (item.price || 0) - item.regularPrice;
+              }
+            } else {
+              deduct = (item.price || 0) - item.regularPrice;
+            }
+            totalDeduct += deduct > 0 ? deduct : 0;
+          }
+        });
+
+        const updatedReceipt = {
+          ...receipt,
+          date: currentDate || new Date().toISOString().split('T')[0],
+          location: currentLocation || 'Unknown Location',
+          items: [...currentItems],
+          totalDeductible: totalDeduct
+        };
 
         try {
-          const tx = db.transaction(STORE_NAME, 'readonly');
-          const store = tx.objectStore(STORE_NAME);
-          const receipt = await store.get(Number(editId));
-          await tx.done;
-
-          if (receipt) {
-            document.getElementById('receipt-location').value = receipt.location || '';
-            document.getElementById('receipt-date').value = receipt.date || '';
-
-            currentItems = receipt.items || [];
-            renderItems();
-            updateDeductibles();
-
-            // Change save button to update existing receipt
-            saveReceiptBtn.onclick = async () => {
-              currentDate = document.getElementById('receipt-date').value;
-              currentLocation = document.getElementById('receipt-location').value;
-
-              if (currentItems.length === 0) return alert('No items to save.');
-
-              let totalDeduct = 0;
-              currentItems.forEach(item => {
-                if (item.regularPrice > 0) {
-                  let deduct = 0;
-                  if (item.quantity) {
-                    const qtyInLb = convertToLb(item.quantity);
-                    if (qtyInLb > 0) {
-                      const specialtyTotal = item.price || 0;
-                      const regularTotal = item.regularPrice * qtyInLb;
-                      deduct = specialtyTotal - regularTotal;
-                    } else {
-                      deduct = (item.price || 0) - item.regularPrice;
-                    }
-                  } else {
-                    deduct = (item.price || 0) - item.regularPrice;
-                  }
-                  totalDeduct += deduct > 0 ? deduct : 0;
-                }
-              });
-
-              const updatedReceipt = {
-                ...receipt,
-                date: currentDate || new Date().toISOString().split('T')[0],
-                location: currentLocation || 'Unknown Location',
-                items: [...currentItems],
-                totalDeductible: totalDeduct
-              };
-
-              try {
-                await db.put(STORE_NAME, updatedReceipt);
-                alert('Receipt updated!');
-                localStorage.removeItem('editReceiptId');
-                editSection.style.display = 'none';
-                itemsContainer.innerHTML = '';
-                document.getElementById('barcode-scan-btn').style.display = 'block';
-                document.getElementById('manual-btn').style.display = 'block';
-                document.getElementById('edit-title').textContent = 'Review & Edit Receipt';
-                document.getElementById('save-receipt').textContent = 'Save Receipt';
-                saveReceiptBtn.onclick = null; // Reset to original
-              } catch (err) {
-                console.error('Update error:', err);
-                alert('Error updating receipt.');
-              }
-            };
-          }
+          await db.put(STORE_NAME, updatedReceipt);
+          alert('Receipt updated!');
+          localStorage.removeItem('editReceiptId');
+          editSection.style.display = 'none';
+          itemsContainer.innerHTML = '';
+          document.getElementById('barcode-scan-btn').style.display = 'block';
+          document.getElementById('manual-btn').style.display = 'block';
+          editTitle.textContent = 'Review & Edit Receipt';
+          saveReceiptBtn.textContent = 'Save Receipt';
+          saveReceiptBtn.onclick = null; // Reset to original (or re-attach default if needed)
         } catch (err) {
-          console.error('Load receipt for edit error:', err);
-          alert('Error loading receipt for edit.');
+          console.error('Update error:', err);
+          alert('Error updating receipt.');
         }
-      }
-    });
-  </script>
+      };
+    } catch (err) {
+      console.error('Load receipt for edit error:', err);
+      alert('Error loading receipt for edit.');
+      localStorage.removeItem('editReceiptId');
+      editTitle.textContent = 'Review & Edit Receipt';
+      saveReceiptBtn.textContent = 'Save Receipt';
+    }
+  });
+</script>
 </body>
 </html>
