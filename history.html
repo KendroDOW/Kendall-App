@@ -171,5 +171,36 @@
 
   <!-- Hidden camera input -->
   <input type="file" id="hidden-camera-input" accept="image/*" capture="environment" style="display:none;">
+  <!-- Hamburger menu toggle - bullet-proof version -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const navLinks = document.querySelector('.nav-links');
+
+    if (!hamburgerBtn) {
+      console.error('Hamburger button not found - check id="hamburger-btn"');
+      return;
+    }
+    if (!navLinks) {
+      console.error('Nav links container not found - check class="nav-links"');
+      return;
+    }
+
+    console.log('Hamburger script loaded - button and nav found');
+
+    hamburgerBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent bubbling issues
+      navLinks.classList.toggle('active');
+      console.log('Hamburger clicked - nav-links active:', navLinks.classList.contains('active'));
+    });
+
+    // Close menu when clicking outside (optional but nice)
+    document.addEventListener('click', (e) => {
+      if (!hamburgerBtn.contains(e.target) && !navLinks.contains(e.target)) {
+        navLinks.classList.remove('active');
+      }
+    });
+  });
+</script>
 </body>
 </html>
