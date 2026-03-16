@@ -30,19 +30,22 @@
   </nav>
 
   <main id="main-content">
-    <div class="hero">
-      <h1>Receipt Box</h1>
-      <p>View and manage your saved receipts. Click the + or 📷 icon to add or view photos.</p>
-    </div>
-<div style="margin:20px 0; text-align:center;">
-  <button onclick="loadLogs('newest')" class="secondary" style="margin:0 8px;">Newest First</button>
-  <button onclick="loadLogs('oldest')" class="secondary" style="margin:0 8px;">Oldest First</button>
-  <button onclick="loadLogs('highest')" class="secondary" style="margin:0 8px;">Highest Deductible</button>
-  <button onclick="loadLogs('lowest')" class="secondary" style="margin:0 8px;">Lowest Deductible</button>
-</div>
-    <div id="log-list"></div>
-    
-<!-- New: Tax Year Total Deductible -->
+  <div class="hero">
+    <h1>Receipt Box</h1>
+    <p>View and manage your saved receipts. Click + or 📷 to add photos, ✏️ to edit, × to delete.</p>
+  </div>
+
+  <!-- New: Sorting Buttons -->
+  <div style="margin: 20px 0; text-align: center; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;">
+    <button onclick="loadLogs('newest')" class="secondary">Newest First</button>
+    <button onclick="loadLogs('oldest')" class="secondary">Oldest First</button>
+    <button onclick="loadLogs('highest')" class="secondary">Highest Deductible</button>
+    <button onclick="loadLogs('lowest')" class="secondary">Lowest Deductible</button>
+  </div>
+
+  <div id="log-list"></div>
+
+  <!-- Tax Year Total (keep this below logs) -->
   <div id="tax-year-total" style="margin:32px auto; padding:20px; background:#e6f3ff; border-radius:12px; max-width:600px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
     <h3>Current Tax Year Deductible</h3>
     <p style="font-size:1.1rem; margin:8px 0;">April 15, 2025 – April 14, 2026</p>
@@ -52,6 +55,8 @@
 
   <button id="export-csv" class="primary" style="margin:24px auto; display:block;">Export All to CSV</button>
 
+  <!-- Keep your modals here (capture, viewer, report) -->
+</main>
     <!-- Capture Modal -->
     <div id="photo-capture-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:999; align-items:center; justify-content:center;">
       <div style="background:white; border-radius:12px; padding:24px; width:90%; max-width:500px; text-align:center; position:relative;">
