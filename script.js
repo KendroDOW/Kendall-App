@@ -525,17 +525,17 @@ if (isHomePage) {
       block.className = 'item-block';
       block.innerHTML = `
         <h4>Item ${index + 1}</h4>
-       
+        
         <div class="form-field">
           <label>Item Name</label>
           <input type="text" value="${item.name}" data-index="${index}" class="name" placeholder="e.g. Great Value Quick Oats Gluten Free" />
         </div>
-       
+        
         <div class="form-field ${hasQuantity ? '' : 'hidden'}">
           <label>Net Weight / Quantity</label>
           <input type="text" value="${item.quantity}" data-index="${index}" class="quantity" />
         </div>
-       
+        
         <div class="form-field">
           <label>Price (total for item)</label>
           <div class="input-with-dollar">
@@ -543,12 +543,12 @@ if (isHomePage) {
             <input type="number" step="0.01" value="${item.price || ''}" data-index="${index}" class="price" placeholder="e.g. 6.99" />
           </div>
         </div>
-       
+        
         <div class="form-field ${hasRegularPrice ? '' : 'hidden'}">
           <label>USDA Avg Regular Price (per lb)</label>
           <input type="number" step="0.01" value="${item.regularPrice || ''}" data-index="${index}" class="regular-price" readonly />
         </div>
-       
+        
         <div class="form-field">
           <label>Category</label>
           <select data-index="${index}" class="category">
@@ -559,16 +559,17 @@ if (isHomePage) {
             <option value="Other" ${item.category==='Other'?'selected':''}>Other</option>
           </select>
         </div>
-       
+        
         <div class="form-field ${hasDeductible ? '' : 'hidden'}">
           <label>Estimated Deductible (based on USDA averages)</label>
           <input type="number" step="0.01" value="${item.deductible || ''}" data-index="${index}" class="deductible" readonly />
         </div>
-       
+        
         <button class="remove-item" data-index="${index}">Remove Item</button>
       `;
       itemsContainer.appendChild(block);
     });
+
     // Live updates on input
     itemsContainer.addEventListener('input', (e) => {
       const el = e.target;
@@ -617,6 +618,7 @@ if (isHomePage) {
         updateDeductibles();
       }
     });
+
     itemsContainer.addEventListener('change', (e) => {
       const el = e.target;
       if (el.matches('.category')) {
@@ -625,6 +627,7 @@ if (isHomePage) {
         updateDeductibles();
       }
     });
+
     itemsContainer.addEventListener('click', (e) => {
       if (e.target.matches('.remove-item')) {
         const idx = e.target.dataset.index;
@@ -784,86 +787,90 @@ if (isHistoryPage) {
   // Make it global for console/debug
   window.calculateTaxYearTotal = calculateTaxYearTotal;
 
- async function loadLogs(sortBy = 'newest') {
-  const logList = document.getElementById('log-list');
-  if (!logList) return;
-  logList.innerHTML = '<p>Loading history...</p>';
-window.loadLogs = loadLogs;
-   
-  try {
-    if (!db) await initDB();
+  async function loadLogs(sortBy = 'newest') {
+    const logList = document.getElementById('log-list');
+    if (!logList) return;
+    logList.innerHTML = '<p>Loading history...</p>';
 
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    let all = await store.getAll();
-    await tx.done;
+    try {
+      if (!db) await initDB();
 
-    logList.innerHTML = all.length ? '' : '<p>No receipts logged yet.</p>';
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      let all = await store.getAll();
+      await tx.done;
 
-    console.log('[loadLogs] All receipts loaded:', all);
+      logList.innerHTML = all.length ? '' : '<p>No receipts logged yet.</p>';
 
-    // Calculate and display tax year total
-    const totalDeductible = calculateTaxYearTotal(all);
-    console.log('[loadLogs] Calculated tax year total:', totalDeductible);
+      console.log('[loadLogs] All receipts loaded:', all);
 
-    const totalElement = document.getElementById('total-deductible-amount');
-    if (totalElement) {
-      totalElement.textContent = totalDeductible === '0.00' 
-        ? '$0.00 (no qualifying receipts this tax year)' 
-        : `$${totalDeductible}`;
-      totalElement.style.color = totalDeductible === '0.00' ? '#777' : '#1976d2';
+      // Calculate and display tax year total
+      const totalDeductible = calculateTaxYearTotal(all);
+      console.log('[loadLogs] Calculated tax year total:', totalDeductible);
+
+      const totalElement = document.getElementById('total-deductible-amount');
+      if (totalElement) {
+        totalElement.textContent = totalDeductible === '0.00' 
+          ? '$0.00 (no qualifying receipts this tax year)' 
+          : `$${totalDeductible}`;
+        totalElement.style.color = totalDeductible === '0.00' ? '#777' : '#1976d2';
+      } else {
+        console.warn('[loadLogs] total-deductible-amount element not found');
+      }
+
+      // Sort receipts
+      if (sortBy === 'oldest') {
+        all.sort((a, b) => new Date(a.date) - new Date(b.date));
+      } else if (sortBy === 'highest') {
+        all.sort((a, b) => (b.totalDeductible || 0) - (a.totalDeductible || 0));
+      } else if (sortBy === 'lowest') {
+        all.sort((a, b) => (a.totalDeductible || 0) - (b.totalDeductible || 0));
+      } else { // newest (default)
+        all.sort((a, b) => new Date(b.date) - new Date(a.date));
+      }
+
+      all.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'history-card';
+        card.style.cursor = 'pointer';
+        card.style.padding = '16px';
+        card.style.background = 'white';
+        card.style.borderRadius = '8px';
+        card.style.marginBottom = '12px';
+        card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+
+        const photoCount = r.photos ? r.photos.length : 0;
+        const addIcon = '+';
+        const cameraIcon = photoCount > 0 ? '📷' : '';
+        const eyeIcon = photoCount > 0 ? '👁️' : '';
+        const editIcon = '✏️';
+        const deleteIcon = '×';
+        const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
+
+        card.innerHTML = `
+          <strong>${r.location || 'Unknown Location'} - ${r.date}</strong><br>
+          <small>${r.items.length} item(s) • Deductible: $${r.totalDeductible?.toFixed(2) || '0.00'}</small>
+          <div style="margin-top:12px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; cursor:pointer;">
+            <span class="photo-icon tooltip" title="Add receipt photo" onclick="event.stopPropagation(); attachPhotos(${r.id})">${addIcon}</span>
+            ${badge}
+            ${cameraIcon ? `<span class="photo-icon tooltip" title="Add more photos" onclick="event.stopPropagation(); attachPhotos(${r.id})">${cameraIcon}</span>` : ''}
+            ${eyeIcon ? `<span class="photo-icon tooltip" title="View receipt photos" onclick="event.stopPropagation(); viewPhotos(${r.id})">${eyeIcon}</span>` : ''}
+            <span class="photo-icon tooltip" title="Edit receipt" onclick="event.stopPropagation(); editReceipt(${r.id})">${editIcon}</span>
+            <span class="photo-icon tooltip" title="Delete receipt" onclick="event.stopPropagation(); deleteReceipt(${r.id})">${deleteIcon}</span>
+          </div>
+        `;
+
+        card.addEventListener('click', () => showReport(r));
+        logList.appendChild(card);
+      });
+    } catch (err) {
+      console.error('loadLogs error:', err);
+      logList.innerHTML = '<p>Error loading history. Check console.</p>';
     }
-
-    // Sort receipts
-    if (sortBy === 'oldest') {
-      all.sort((a, b) => new Date(a.date) - new Date(b.date));
-    } else if (sortBy === 'highest') {
-      all.sort((a, b) => (b.totalDeductible || 0) - (a.totalDeductible || 0));
-    } else if (sortBy === 'lowest') {
-      all.sort((a, b) => (a.totalDeductible || 0) - (b.totalDeductible || 0));
-    } else { // newest (default)
-      all.sort((a, b) => new Date(b.date) - new Date(a.date));
-    }
-
-    all.forEach(r => {
-      const card = document.createElement('div');
-      card.className = 'history-card';
-      card.style.cursor = 'pointer';
-      card.style.padding = '16px';
-      card.style.background = 'white';
-      card.style.borderRadius = '8px';
-      card.style.marginBottom = '12px';
-      card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
-
-      const photoCount = r.photos ? r.photos.length : 0;
-      const addIcon = '+';
-      const cameraIcon = photoCount > 0 ? '📷' : '';
-      const eyeIcon = photoCount > 0 ? '👁️' : '';
-      const editIcon = '✏️';
-      const deleteIcon = '×';
-      const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
-
-      card.innerHTML = `
-        <strong>${r.location || 'Unknown Location'} - ${r.date}</strong><br>
-        <small>${r.items.length} item(s) • Deductible: $${r.totalDeductible?.toFixed(2) || '0.00'}</small>
-        <div style="margin-top:12px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; cursor:pointer;">
-          <span class="photo-icon tooltip" title="Add receipt photo" onclick="event.stopPropagation(); attachPhotos(${r.id})">${addIcon}</span>
-          ${badge}
-          ${cameraIcon ? `<span class="photo-icon tooltip" title="Add more photos" onclick="event.stopPropagation(); attachPhotos(${r.id})">${cameraIcon}</span>` : ''}
-          ${eyeIcon ? `<span class="photo-icon tooltip" title="View receipt photos" onclick="event.stopPropagation(); viewPhotos(${r.id})">${eyeIcon}</span>` : ''}
-          <span class="photo-icon tooltip" title="Edit receipt" onclick="event.stopPropagation(); editReceipt(${r.id})">${editIcon}</span>
-          <span class="photo-icon tooltip" title="Delete receipt" onclick="event.stopPropagation(); deleteReceipt(${r.id})">${deleteIcon}</span>
-        </div>
-      `;
-
-      card.addEventListener('click', () => showReport(r));
-      logList.appendChild(card);
-    });
-  } catch (err) {
-    console.error('loadLogs error:', err);
-    logList.innerHTML = '<p>Error loading history. Check console.</p>';
   }
-}
+
+  // Make loadLogs global so dropdown onclick works
+  window.loadLogs = loadLogs;
 
   // Edit receipt (save ID and redirect to home)
   function editReceipt(receiptId) {
@@ -926,8 +933,8 @@ window.loadLogs = loadLogs;
     document.getElementById('report-modal').style.display = 'none';
   });
 
-  // Load on page load
-  loadLogs();
+  // Load on page load (default sort: newest)
+  loadLogs('newest');
 
   // Export CSV
   document.getElementById('export-csv')?.addEventListener('click', async () => {
