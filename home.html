@@ -131,14 +131,11 @@
       cycleText.className = 'cycle-text active ' + dietTypes[0].class;
       setInterval(() => {
         cycleText.classList.remove('active');
-        
         setTimeout(() => {
           currentIndex = (currentIndex + 1) % dietTypes.length;
           const next = dietTypes[currentIndex];
-          
           cycleText.textContent = next.text;
           cycleText.className = 'cycle-text ' + next.class;
-          
           setTimeout(() => {
             cycleText.classList.add('active');
           }, 100);
@@ -188,110 +185,135 @@
   <!-- Hidden camera input -->
   <input type="file" id="hidden-camera-input" accept="image/*" capture="environment" style="display:none;">
 
-  <!-- Edit pre-fill logic (fixed timing) -->
+  <!-- Edit pre-fill logic (fixed timing & null checks) -->
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOMContentLoaded fired - checking for edit mode');
+
       const editIdStr = localStorage.getItem('editReceiptId');
-      if (!editIdStr) return;
+      if (!editIdStr) {
+        console.log('No editReceiptId in localStorage');
+        return;
+      }
 
       const editId = Number(editIdStr);
+      console.log('Attempting to edit receipt ID:', editId);
+
       const editTitle = document.getElementById('edit-title');
       const saveBtn = document.getElementById('save-receipt');
+      const locationInput = document.getElementById('receipt-location');
+      const dateInput = document.getElementById('receipt-date');
+      const itemsContainer = document.getElementById('items-container');
+      const editSection = document.getElementById('edit-section');
 
-      if (!editTitle || !saveBtn) {
-        console.error('Edit title or save button not found');
-        alert('Edit UI elements not found.');
+      if (!editTitle || !saveBtn || !locationInput || !dateInput || !itemsContainer || !editSection) {
+        console.error('One or more edit elements missing:', {
+          editTitle: !!editTitle,
+          saveBtn: !!saveBtn,
+          locationInput: !!locationInput,
+          dateInput: !!dateInput,
+          itemsContainer: !!itemsContainer,
+          editSection: !!editSection
+        });
+        alert('Edit UI elements not found. Please refresh.');
         localStorage.removeItem('editReceiptId');
         return;
       }
 
-      console.log('Editing receipt ID:', editId);
       editTitle.textContent = 'Edit Receipt';
       saveBtn.textContent = 'Update Receipt';
 
-      try {
-        if (!db) await initDB();
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const store = tx.objectStore(STORE_NAME);
-        const receipt = await store.get(editId);
-        await tx.done;
+      // Load receipt
+      (async () => {
+        try {
+          if (!db) await initDB();
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const store = tx.objectStore(STORE_NAME);
+          const receipt = await store.get(editId);
+          await tx.done;
 
-        if (receipt) {
+          if (!receipt) {
+            console.warn('Receipt not found for ID:', editId);
+            alert('Receipt not found for editing.');
+            localStorage.removeItem('editReceiptId');
+            resetEditUI();
+            return;
+          }
+
           console.log('Receipt loaded for edit:', receipt);
-          document.getElementById('receipt-location').value = receipt.location || '';
-          document.getElementById('receipt-date').value = receipt.date || '';
+
+          locationInput.value = receipt.location || '';
+          dateInput.value = receipt.date || '';
+
           currentItems = receipt.items || [];
           renderItems();
           updateDeductibles();
-        } else {
-          console.warn('Receipt not found:', editId);
-          alert('Receipt not found for editing.');
-          localStorage.removeItem('editReceiptId');
-          editTitle.textContent = 'Review & Edit Receipt';
-          saveBtn.textContent = 'Save Receipt';
-          return;
-        }
 
-        // Override save to update
-        saveBtn.onclick = async () => {
-          console.log('Updating receipt ID:', editId);
-          currentDate = document.getElementById('receipt-date').value;
-          currentLocation = document.getElementById('receipt-location').value;
+          // Override save button for update
+          saveBtn.onclick = async () => {
+            console.log('Update button clicked for ID:', editId);
 
-          if (currentItems.length === 0) return alert('No items to save.');
+            const currentDate = dateInput.value;
+            const currentLocation = locationInput.value;
 
-          let totalDeduct = 0;
-          currentItems.forEach(item => {
-            if (item.regularPrice > 0) {
-              let deduct = 0;
-              if (item.quantity) {
-                const qtyInLb = convertToLb(item.quantity);
-                if (qtyInLb > 0) {
-                  const specialtyTotal = item.price || 0;
-                  const regularTotal = item.regularPrice * qtyInLb;
-                  deduct = specialtyTotal - regularTotal;
+            if (currentItems.length === 0) return alert('No items to save.');
+
+            let totalDeduct = 0;
+            currentItems.forEach(item => {
+              if (item.regularPrice > 0) {
+                let deduct = 0;
+                if (item.quantity) {
+                  const qtyInLb = convertToLb(item.quantity);
+                  if (qtyInLb > 0) {
+                    const specialtyTotal = item.price || 0;
+                    const regularTotal = item.regularPrice * qtyInLb;
+                    deduct = specialtyTotal - regularTotal;
+                  } else {
+                    deduct = (item.price || 0) - item.regularPrice;
+                  }
                 } else {
                   deduct = (item.price || 0) - item.regularPrice;
                 }
-              } else {
-                deduct = (item.price || 0) - item.regularPrice;
+                totalDeduct += deduct > 0 ? deduct : 0;
               }
-              totalDeduct += deduct > 0 ? deduct : 0;
+            });
+
+            const updatedReceipt = {
+              id: editId,
+              date: currentDate || new Date().toISOString().split('T')[0],
+              location: currentLocation || 'Unknown Location',
+              items: [...currentItems],
+              photos: receipt.photos || [], // Preserve existing photos
+              totalDeductible: totalDeduct,
+              createdAt: receipt.createdAt // Preserve original creation time
+            };
+
+            try {
+              await db.put(STORE_NAME, updatedReceipt);
+              alert('Receipt updated!');
+              localStorage.removeItem('editReceiptId');
+              resetEditUI();
+            } catch (err) {
+              console.error('Update error:', err);
+              alert('Error updating receipt.');
             }
-          });
-
-          const updatedReceipt = {
-            id: editId,
-            date: currentDate || new Date().toISOString().split('T')[0],
-            location: currentLocation || 'Unknown Location',
-            items: [...currentItems],
-            photos: receipt.photos || [], // Preserve existing photos
-            totalDeductible: totalDeduct,
-            createdAt: receipt.createdAt // Preserve original creation time
           };
+        } catch (err) {
+          console.error('Load receipt for edit error:', err);
+          alert('Error loading receipt for edit.');
+          localStorage.removeItem('editReceiptId');
+          resetEditUI();
+        }
+      })();
 
-          try {
-            await db.put(STORE_NAME, updatedReceipt);
-            alert('Receipt updated!');
-            localStorage.removeItem('editReceiptId');
-            editSection.style.display = 'none';
-            itemsContainer.innerHTML = '';
-            document.getElementById('barcode-scan-btn').style.display = 'block';
-            document.getElementById('manual-btn').style.display = 'block';
-            editTitle.textContent = 'Review & Edit Receipt';
-            saveBtn.textContent = 'Save Receipt';
-            saveBtn.onclick = null; // Reset to default behavior
-          } catch (err) {
-            console.error('Update error:', err);
-            alert('Error updating receipt.');
-          }
-        };
-      } catch (err) {
-        console.error('Load receipt for edit error:', err);
-        alert('Error loading receipt for edit.');
-        localStorage.removeItem('editReceiptId');
+      function resetEditUI() {
         editTitle.textContent = 'Review & Edit Receipt';
         saveBtn.textContent = 'Save Receipt';
+        saveBtn.onclick = null; // Reset to default behavior
+        editSection.style.display = 'none';
+        itemsContainer.innerHTML = '';
+        document.getElementById('barcode-scan-btn').style.display = 'block';
+        document.getElementById('manual-btn').style.display = 'block';
       }
     });
   </script>
