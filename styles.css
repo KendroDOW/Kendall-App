@@ -740,3 +740,19 @@ h2 {
   z-index: 10;
   pointer-events: none;
 }
+/* Make sort buttons look nicer */
+#sorting-buttons button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  min-width: 140px;
+}
+
+@media (max-width: 600px) {
+  #sorting-buttons {
+    flex-direction: column;
+  }
+  #sorting-buttons button {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+}
