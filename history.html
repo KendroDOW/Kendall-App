@@ -30,33 +30,39 @@
   </nav>
 
   <main id="main-content">
-  <div class="hero">
-    <h1>Receipt Box</h1>
-    <p>View and manage your saved receipts. Click + or 📷 to add photos, ✏️ to edit, × to delete.</p>
-  </div>
+    <div class="hero">
+      <h1>Receipt Box</h1>
+      <p>View and manage your saved receipts. Click + or 📷 to add photos, ✏️ to edit, × to delete.</p>
+    </div>
 
-  <!-- New: Sorting Buttons -->
-  <div style="margin: 20px 0; text-align: center; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;">
-    <button onclick="loadLogs('newest')" class="secondary">Newest First</button>
-    <button onclick="loadLogs('oldest')" class="secondary">Oldest First</button>
-    <button onclick="loadLogs('highest')" class="secondary">Highest Deductible</button>
-    <button onclick="loadLogs('lowest')" class="secondary">Lowest Deductible</button>
-  </div>
+    <!-- Sorting Dropdown (single button with menu) -->
+    <div style="margin: 20px 0; text-align: center;">
+      <div style="position: relative; display: inline-block;">
+        <button id="sort-btn" class="primary" onclick="toggleSortMenu()" style="padding: 12px 24px; font-size: 1.1rem;">
+          Sort ▼
+        </button>
+        <div id="sort-menu" style="display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 180px; z-index: 10; overflow: hidden;">
+          <button onclick="loadLogs('newest'); toggleSortMenu()" style="display: block; width: 100%; padding: 12px; text-align: left; background: none; border: none; cursor: pointer;">Newest First</button>
+          <button onclick="loadLogs('oldest'); toggleSortMenu()" style="display: block; width: 100%; padding: 12px; text-align: left; background: none; border: none; cursor: pointer;">Oldest First</button>
+          <button onclick="loadLogs('highest'); toggleSortMenu()" style="display: block; width: 100%; padding: 12px; text-align: left; background: none; border: none; cursor: pointer;">Highest Deductible</button>
+          <button onclick="loadLogs('lowest'); toggleSortMenu()" style="display: block; width: 100%; padding: 12px; text-align: left; background: none; border: none; cursor: pointer;">Lowest Deductible</button>
+        </div>
+      </div>
+    </div>
 
-  <div id="log-list"></div>
+    <div id="log-list"></div>
 
-  <!-- Tax Year Total (keep this below logs) -->
-  <div id="tax-year-total" style="margin:32px auto; padding:20px; background:#e6f3ff; border-radius:12px; max-width:600px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
-    <h3>Current Tax Year Deductible</h3>
-    <p style="font-size:1.1rem; margin:8px 0;">April 15, 2025 – April 14, 2026</p>
-    <div style="font-size:2.2rem; font-weight:bold; color:#1976d2;" id="total-deductible-amount">$0.00</div>
-    <p style="font-size:0.9rem; color:#555; margin-top:12px;">Sum of estimated medical food deductions from all receipts in this tax year.</p>
-  </div>
+    <!-- Tax Year Total Deductible -->
+    <div id="tax-year-total" style="margin:32px auto; padding:20px; background:#e6f3ff; border-radius:12px; max-width:600px; text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+      <h3>Current Tax Year Deductible</h3>
+      <p style="font-size:1.1rem; margin:8px 0;">April 15, 2025 – April 14, 2026</p>
+      <div style="font-size:2.2rem; font-weight:bold; color:#1976d2;" id="total-deductible-amount">$0.00</div>
+      <p style="font-size:0.9rem; color:#555; margin-top:12px;">Sum of estimated medical food deductions from all receipts in this tax year.</p>
+    </div>
 
-  <button id="export-csv" class="primary" style="margin:24px auto; display:block;">Export All to CSV</button>
+    <!-- Single Export Button -->
+    <button id="export-csv" class="primary" style="margin:24px auto; display:block;">Export All to CSV</button>
 
-  <!-- Keep your modals here (capture, viewer, report) -->
-</main>
     <!-- Capture Modal -->
     <div id="photo-capture-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:999; align-items:center; justify-content:center;">
       <div style="background:white; border-radius:12px; padding:24px; width:90%; max-width:500px; text-align:center; position:relative;">
@@ -105,16 +111,21 @@
 
   <script src="script.js"></script>
 
-  <!-- Hamburger menu toggle -->
+  <!-- Sorting Dropdown Toggle Script -->
   <script>
-    const hamburgerBtn = document.getElementById('hamburger-btn');
-    const navLinks = document.querySelector('.nav-links');
-
-    if (hamburgerBtn && navLinks) {
-      hamburgerBtn.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-      });
+    function toggleSortMenu() {
+      const menu = document.getElementById('sort-menu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const sortBtn = document.getElementById('sort-btn');
+      const sortMenu = document.getElementById('sort-menu');
+      if (!sortBtn.contains(event.target) && !sortMenu.contains(event.target)) {
+        sortMenu.style.display = 'none';
+      }
+    });
   </script>
 
   <!-- Hidden camera input -->
