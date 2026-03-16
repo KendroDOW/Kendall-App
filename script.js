@@ -862,11 +862,18 @@ async function loadLogs() {
 
     logList.innerHTML = all.length ? '' : '<p>No receipts logged yet.</p>';
 
+    console.log('[loadLogs] All receipts loaded:', all);
+
     // Calculate and display tax year total
-    const totalDeductible = calculateTaxYearTotal(all);
+    const totalDeductible = window.calculateTaxYearTotal(all);
+    console.log('[loadLogs] Calculated tax year total:', totalDeductible);
+
     const totalElement = document.getElementById('total-deductible-amount');
     if (totalElement) {
-      totalElement.textContent = `$${totalDeductible}`;
+      totalElement.textContent = totalDeductible === '0.00' ? '$0.00 (no qualifying receipts this tax year)' : `$${totalDeductible}`;
+      totalElement.style.color = totalDeductible === '0.00' ? '#777' : '#1976d2';
+    } else {
+      console.warn('[loadLogs] total-deductible-amount element not found');
     }
 
     all.forEach(r => {
@@ -908,7 +915,6 @@ async function loadLogs() {
     logList.innerHTML = '<p>Error loading history. Check console.</p>';
   }
 }
-    
     const logList = document.getElementById('log-list');
     if (!logList) return;
     logList.innerHTML = '<p>Loading history...</p>';
