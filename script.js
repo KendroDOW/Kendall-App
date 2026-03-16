@@ -914,62 +914,6 @@ if (isHistoryPage) {
     }
   }
 
-  // ... (keep editReceipt, deleteReceipt, showReport, export-csv unchanged)
-}
-    const logList = document.getElementById('log-list');
-    if (!logList) return;
-    logList.innerHTML = '<p>Loading history...</p>';
-
-    try {
-      if (!db) await initDB();
-
-      const tx = db.transaction(STORE_NAME, 'readonly');
-      const store = tx.objectStore(STORE_NAME);
-      const all = await store.getAll();
-      await tx.done;
-
-      logList.innerHTML = all.length ? '' : '<p>No receipts logged yet.</p>';
-
-      all.forEach(r => {
-        const card = document.createElement('div');
-        card.className = 'history-card';
-        card.style.cursor = 'pointer';
-        card.style.padding = '16px';
-        card.style.background = 'white';
-        card.style.borderRadius = '8px';
-        card.style.marginBottom = '12px';
-        card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
-
-        const photoCount = r.photos ? r.photos.length : 0;
-        const addIcon = '+';
-        const cameraIcon = photoCount > 0 ? '📷' : '';
-        const eyeIcon = photoCount > 0 ? '👁️' : '';
-        const editIcon = '✏️'; // Reliable pencil emoji
-        const deleteIcon = '×';
-        const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
-
-       card.innerHTML = `
-  <strong>${r.location || 'Unknown Location'} - ${r.date}</strong><br>
-  <small>${r.items.length} item(s) • Deductible: $${r.totalDeductible?.toFixed(2) || '0.00'}</small>
-  <div style="margin-top:12px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; cursor:pointer;">
-    <span class="photo-icon tooltip" title="Add receipt photo" onclick="event.stopPropagation(); attachPhotos(${r.id})">${addIcon}</span>
-    ${badge ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : ''}
-    ${cameraIcon ? `<span class="photo-icon tooltip" title="Add more photos" onclick="event.stopPropagation(); attachPhotos(${r.id})">${cameraIcon}</span>` : ''}
-    ${eyeIcon ? `<span class="photo-icon tooltip" title="View receipt photos" onclick="event.stopPropagation(); viewPhotos(${r.id})">${eyeIcon}</span>` : ''}
-    <span class="photo-icon tooltip" title="Edit receipt" onclick="event.stopPropagation(); editReceipt(${r.id})">${editIcon}</span>
-    <span class="photo-icon tooltip" title="Delete receipt" onclick="event.stopPropagation(); deleteReceipt(${r.id})">${deleteIcon}</span>
-  </div>
-`;
-
-        card.addEventListener('click', () => showReport(r));
-        logList.appendChild(card);
-      });
-    } catch (err) {
-      console.error('loadLogs error:', err);
-      logList.innerHTML = '<p>Error loading history. Check console.</p>';
-    }
-  }
-
   // Edit receipt (save ID and redirect to home)
   function editReceipt(receiptId) {
     localStorage.setItem('editReceiptId', receiptId);
@@ -1034,7 +978,7 @@ if (isHistoryPage) {
   // Load on page load
   loadLogs();
 
-  // Export CSV
+  // Export CSV (keep only one listener)
   document.getElementById('export-csv')?.addEventListener('click', async () => {
     if (!db) await initDB();
     const tx = db.transaction(STORE_NAME);
