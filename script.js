@@ -845,18 +845,18 @@ if (isHistoryPage) {
         const deleteIcon = '×';
         const badge = photoCount > 0 ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : '';
 
-        card.innerHTML = `
-          <strong>${r.location || 'Unknown Location'} - ${r.date}</strong><br>
-          <small>${r.items.length} item(s) • Deductible: $${r.totalDeductible?.toFixed(2) || '0.00'}</small>
-          <div style="margin-top:8px; cursor:pointer;">
-            <span class="photo-icon" title="Add receipt photo" onclick="event.stopPropagation(); attachPhotos(${r.id})">${addIcon}</span>
-            ${badge}
-            ${cameraIcon ? `<span class="photo-icon" title="Add more photos" onclick="event.stopPropagation(); attachPhotos(${r.id})">${cameraIcon}</span>` : ''}
-            ${eyeIcon ? `<span class="photo-icon" title="View receipt photos" onclick="event.stopPropagation(); viewPhotos(${r.id})">${eyeIcon}</span>` : ''}
-            <span class="photo-icon" title="Edit receipt" onclick="event.stopPropagation(); editReceipt(${r.id})">${editIcon}</span>
-            <span class="photo-icon" title="Delete receipt" onclick="event.stopPropagation(); deleteReceipt(${r.id})">${deleteIcon}</span>
-          </div>
-        `;
+       card.innerHTML = `
+  <strong>${r.location || 'Unknown Location'} - ${r.date}</strong><br>
+  <small>${r.items.length} item(s) • Deductible: $${r.totalDeductible?.toFixed(2) || '0.00'}</small>
+  <div style="margin-top:12px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; cursor:pointer;">
+    <span class="photo-icon tooltip" title="Add receipt photo" onclick="event.stopPropagation(); attachPhotos(${r.id})">${addIcon}</span>
+    ${badge ? `<span style="background:#1976d2;color:white;border-radius:50%;padding:2px 8px;font-size:0.8rem;">${photoCount}</span>` : ''}
+    ${cameraIcon ? `<span class="photo-icon tooltip" title="Add more photos" onclick="event.stopPropagation(); attachPhotos(${r.id})">${cameraIcon}</span>` : ''}
+    ${eyeIcon ? `<span class="photo-icon tooltip" title="View receipt photos" onclick="event.stopPropagation(); viewPhotos(${r.id})">${eyeIcon}</span>` : ''}
+    <span class="photo-icon tooltip" title="Edit receipt" onclick="event.stopPropagation(); editReceipt(${r.id})">${editIcon}</span>
+    <span class="photo-icon tooltip" title="Delete receipt" onclick="event.stopPropagation(); deleteReceipt(${r.id})">${deleteIcon}</span>
+  </div>
+`;
 
         card.addEventListener('click', () => showReport(r));
         logList.appendChild(card);
