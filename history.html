@@ -34,7 +34,12 @@
       <h1>Receipt Box</h1>
       <p>View and manage your saved receipts. Click the + or 📷 icon to add or view photos.</p>
     </div>
-
+<div style="margin:20px 0; text-align:center;">
+  <button onclick="loadLogs('newest')" class="secondary" style="margin:0 8px;">Newest First</button>
+  <button onclick="loadLogs('oldest')" class="secondary" style="margin:0 8px;">Oldest First</button>
+  <button onclick="loadLogs('highest')" class="secondary" style="margin:0 8px;">Highest Deductible</button>
+  <button onclick="loadLogs('lowest')" class="secondary" style="margin:0 8px;">Lowest Deductible</button>
+</div>
     <div id="log-list"></div>
     
 <!-- New: Tax Year Total Deductible -->
