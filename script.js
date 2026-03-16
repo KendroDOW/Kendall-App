@@ -788,7 +788,8 @@ if (isHistoryPage) {
   const logList = document.getElementById('log-list');
   if (!logList) return;
   logList.innerHTML = '<p>Loading history...</p>';
-
+window.loadLogs = loadLogs;
+   
   try {
     if (!db) await initDB();
 
