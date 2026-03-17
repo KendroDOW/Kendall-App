@@ -202,11 +202,25 @@
 
   // Quick-add selected items to new receipt
   document.getElementById('quick-add-selected')?.addEventListener('click', async () => {
-    const checkboxes = document.querySelectorAll('.frequent-checkbox:checked');
-    if (checkboxes.length === 0) return;
+  const checkboxes = document.querySelectorAll('.frequent-checkbox:checked');
+  if (checkboxes.length === 0) return;
 
-    const selectedIds = Array.from(checkboxes).map(cb => Number(cb.value));
+  const selectedIds = Array.from(checkboxes).map(cb => Number(cb.value));
 
+  try {
+    if (!myListDB) myListDB = await initMyListDB();
+    const tx = myListDB.transaction(MYLIST_STORE, 'readonly');
+    const store = tx.objectStore(MYLIST_STORE);
+    const selectedItems = await Promise.all(selectedIds.map(id => store.get(id)));
+    await tx.done;
+
+    localStorage.setItem('quickAddItems', JSON.stringify(selectedItems));
+    window.location.href = 'home.html';
+  } catch (err) {
+    console.error('Quick add error:', err);
+    alert('Error loading selected items.');
+  }
+});
     try {
       if (!myListDB) myListDB = await initMyListDB();
       const tx = myListDB.transaction(MYLIST_STORE, 'readonly');
