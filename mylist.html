@@ -100,163 +100,156 @@
   <script src="script.js"></script>
 
   <!-- My List Logic -->
-  <script>
-    // My List storage (separate from receipts)
-    const MYLIST_STORE = 'frequentItems';
+ <script>
+  // My List storage (separate from receipts)
+  const MYLIST_STORE = 'frequentItems';
 
-    async function initMyListDB() {
-      const myListDB = await idb.openDB('DeductEatsMyList', 1, {
-        upgrade(db) {
-          db.createObjectStore(MYLIST_STORE, { keyPath: 'id', autoIncrement: true });
-        },
-      });
-      return myListDB;
+  async function initMyListDB() {
+    const myListDB = await idb.openDB('DeductEatsMyList', 1, {
+      upgrade(db) {
+        db.createObjectStore(MYLIST_STORE, { keyPath: 'id', autoIncrement: true });
+      },
+    });
+    return myListDB;
+  }
+
+  let myListDB;
+
+  async function loadFrequentItems() {
+    if (!myListDB) myListDB = await initMyListDB();
+    const tx = myListDB.transaction(MYLIST_STORE, 'readonly');
+    const store = tx.objectStore(MYLIST_STORE);
+    const items = await store.getAll();
+    await tx.done;
+
+    const container = document.getElementById('frequent-items-container');
+    container.innerHTML = items.length ? '' : '<p>No frequent items yet. Add some!</p>';
+
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '16px';
+      row.style.padding = '16px';
+      row.style.borderBottom = '1px solid #eee';
+      row.style.background = '#f9f9f9';
+      row.style.borderRadius = '8px';
+      row.style.marginBottom = '12px';
+
+      row.innerHTML = `
+        <input type="checkbox" class="frequent-checkbox" value="${item.id}" style="width:24px; height:24px;" />
+        <div style="flex: 1;">
+          <strong>${item.name}</strong><br>
+          <small>${item.quantity || '—'} • $${(item.price || 0).toFixed(2)} • ${item.category || 'None'}</small>
+        </div>
+        <button class="remove-frequent" data-id="${item.id}" style="background:#f44336; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Remove</button>
+      `;
+
+      container.appendChild(row);
+    });
+
+    updateQuickAddButton();
+  }
+
+  function updateQuickAddButton() {
+    const checkboxes = document.querySelectorAll('.frequent-checkbox:checked');
+    const button = document.getElementById('quick-add-selected');
+    const count = checkboxes.length;
+    button.disabled = count === 0;
+    button.textContent = count === 0 ? 'Use Selected Items' : `Use ${count} Selected Item${count !== 1 ? 's' : ''}`;
+    button.style.background = count > 0 ? '#4CAF50' : '#ccc'; // Green when active
+  }
+
+  // Add new frequent item
+  document.getElementById('add-frequent-btn')?.addEventListener('click', () => {
+    document.getElementById('add-frequent-modal').style.display = 'flex';
+  });
+
+  document.getElementById('cancel-frequent')?.addEventListener('click', () => {
+    document.getElementById('add-frequent-modal').style.display = 'none';
+    clearFrequentForm();
+  });
+
+  document.getElementById('save-frequent')?.addEventListener('click', async () => {
+    const name = document.getElementById('frequent-name').value.trim();
+    const quantity = document.getElementById('frequent-quantity').value.trim();
+    const price = parseFloat(document.getElementById('frequent-price').value) || 0;
+    const category = document.getElementById('frequent-category').value;
+
+    if (!name) return alert('Please enter an item name.');
+
+    try {
+      if (!myListDB) myListDB = await initMyListDB();
+      const tx = myListDB.transaction(MYLIST_STORE, 'readwrite');
+      const store = tx.objectStore(MYLIST_STORE);
+      await store.add({ name, quantity, price, category, createdAt: new Date().toISOString() });
+      await tx.done;
+      document.getElementById('add-frequent-modal').style.display = 'none';
+      clearFrequentForm();
+      loadFrequentItems();
+    } catch (err) {
+      console.error('Save frequent item error:', err);
+      alert('Error saving item.');
     }
+  });
 
-    let myListDB;
+  function clearFrequentForm() {
+    document.getElementById('frequent-name').value = '';
+    document.getElementById('frequent-quantity').value = '';
+    document.getElementById('frequent-price').value = '';
+    document.getElementById('frequent-category').value = 'None';
+  }
 
-    async function loadFrequentItems() {
+  // Quick-add selected items to new receipt
+  document.getElementById('quick-add-selected')?.addEventListener('click', async () => {
+    const checkboxes = document.querySelectorAll('.frequent-checkbox:checked');
+    if (checkboxes.length === 0) return;
+
+    const selectedIds = Array.from(checkboxes).map(cb => Number(cb.value));
+
+    try {
       if (!myListDB) myListDB = await initMyListDB();
       const tx = myListDB.transaction(MYLIST_STORE, 'readonly');
       const store = tx.objectStore(MYLIST_STORE);
-      const items = await store.getAll();
+      const selectedItems = await Promise.all(selectedIds.map(id => store.get(id)));
       await tx.done;
 
-      const container = document.getElementById('frequent-items-container');
-      container.innerHTML = items.length ? '' : '<p>No frequent items yet. Add some!</p>';
+      // Map to receipt items format
+      window.currentItems = selectedItems.map(item => ({
+        name: item.name,
+        price: item.price || 0,
+        regularPrice: item.price || 0, // Can be adjusted in home
+        category: item.category || 'None',
+        deductible: '',
+        quantity: item.quantity || ''
+      }));
 
-      items.forEach(item => {
-        const row = document.createElement('div');
-        row.style.display = 'flex';
-        row.style.alignItems = 'center';
-        row.style.gap = '12px';
-        row.style.padding = '12px';
-        row.style.borderBottom = '1px solid #eee';
-
-        row.innerHTML = `
-          <input type="checkbox" class="frequent-checkbox" value="${item.id}" />
-          <div style="flex: 1;">
-            <strong>${item.name}</strong><br>
-            <small>${item.quantity || '—'} • $${item.price?.toFixed(2) || '—'} • ${item.category || 'None'}</small>
-          </div>
-          <button class="remove-frequent" data-id="${item.id}" style="background:#f44336; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">Remove</button>
-        `;
-
-        container.appendChild(row);
-      });
-
-      // Enable/disable Use Selected button
-      updateQuickAddButton();
+      // Redirect to home to complete/edit
+      window.location.href = 'home.html';
+    } catch (err) {
+      console.error('Quick add error:', err);
+      alert('Error loading selected items.');
     }
+  });
 
-    function updateQuickAddButton() {
-      const checkboxes = document.querySelectorAll('.frequent-checkbox:checked');
-      const button = document.getElementById('quick-add-selected');
-      button.disabled = checkboxes.length === 0;
-      button.textContent = `Use ${checkboxes.length} Selected Item${checkboxes.length !== 1 ? 's' : ''}`;
-    }
-
-    // Add new frequent item
-    document.getElementById('add-frequent-btn')?.addEventListener('click', () => {
-      document.getElementById('add-frequent-modal').style.display = 'flex';
-    });
-
-    document.getElementById('cancel-frequent')?.addEventListener('click', () => {
-      document.getElementById('add-frequent-modal').style.display = 'none';
-      clearFrequentForm();
-    });
-
-    document.getElementById('save-frequent')?.addEventListener('click', async () => {
-      const name = document.getElementById('frequent-name').value.trim();
-      const quantity = document.getElementById('frequent-quantity').value.trim();
-      const price = parseFloat(document.getElementById('frequent-price').value) || 0;
-      const category = document.getElementById('frequent-category').value;
-
-      if (!name) return alert('Please enter an item name.');
+  // Remove frequent item
+  document.getElementById('frequent-items-container')?.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('remove-frequent')) {
+      const id = Number(e.target.dataset.id);
+      if (!confirm('Remove this item from your list?')) return;
 
       try {
         if (!myListDB) myListDB = await initMyListDB();
         const tx = myListDB.transaction(MYLIST_STORE, 'readwrite');
         const store = tx.objectStore(MYLIST_STORE);
-        await store.add({ name, quantity, price, category });
+        await store.delete(id);
         await tx.done;
-        document.getElementById('add-frequent-modal').style.display = 'none';
-        clearFrequentForm();
         loadFrequentItems();
       } catch (err) {
-        console.error('Save frequent item error:', err);
-        alert('Error saving item.');
+        console.error('Remove frequent item error:', err);
+        alert('Error removing item.');
       }
-    });
-
-    function clearFrequentForm() {
-      document.getElementById('frequent-name').value = '';
-      document.getElementById('frequent-quantity').value = '';
-      document.getElementById('frequent-price').value = '';
-      document.getElementById('frequent-category').value = 'None';
     }
-
-    // Quick-add selected items to new receipt
-    document.getElementById('quick-add-selected')?.addEventListener('click', async () => {
-      const checkboxes = document.querySelectorAll('.frequent-checkbox:checked');
-      if (checkboxes.length === 0) return;
-
-      const selectedIds = Array.from(checkboxes).map(cb => Number(cb.value));
-
-      try {
-        if (!myListDB) myListDB = await initMyListDB();
-        const tx = myListDB.transaction(MYLIST_STORE, 'readonly');
-        const store = tx.objectStore(MYLIST_STORE);
-        const selectedItems = await Promise.all(selectedIds.map(id => store.get(id)));
-        await tx.done;
-
-        // Map to receipt items format
-        window.currentItems = selectedItems.map(item => ({
-          name: item.name,
-          price: item.price || 0,
-          regularPrice: item.price || 0, // Assume same for quick-add; user can adjust
-          category: item.category || 'None',
-          deductible: '',
-          quantity: item.quantity || ''
-        }));
-
-        // Redirect to home to complete/edit the new receipt
-        window.location.href = 'home.html';
-      } catch (err) {
-        console.error('Quick add error:', err);
-        alert('Error loading selected items.');
-      }
-    });
-
-    // Remove frequent item
-    document.getElementById('frequent-items-container')?.addEventListener('click', async (e) => {
-      if (e.target.classList.contains('remove-frequent')) {
-        const id = Number(e.target.dataset.id);
-        if (!confirm('Remove this item from your list?')) return;
-
-        try {
-          if (!myListDB) myListDB = await initMyListDB();
-          const tx = myListDB.transaction(MYLIST_STORE, 'readwrite');
-          const store = tx.objectStore(MYLIST_STORE);
-          await store.delete(id);
-          await tx.done;
-          loadFrequentItems();
-        } catch (err) {
-          console.error('Remove frequent item error:', err);
-          alert('Error removing item.');
-        }
-      }
-    });
-
-    // Load list on page load
-    loadFrequentItems();
-
-    // Enable/disable button when checkboxes change
-    document.getElementById('frequent-items-container')?.addEventListener('change', (e) => {
-      if (e.target.classList.contains('frequent-checkbox')) {
-        updateQuickAddButton();
-      }
-    });
-  </script>
+  });
 </body>
 </html>
