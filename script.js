@@ -365,17 +365,216 @@ async function viewPhotos(receiptId) {
   }
 }
 
+// ----- Global functions (moved outside if blocks so My List can use them) -----
+function renderItems() {
+  const itemsContainer = document.getElementById('items-container');
+  if (!itemsContainer) return;
+  itemsContainer.innerHTML = '';
+  window.currentItems.forEach((item, index) => {
+    const hasRegularPrice = item.regularPrice > 0;
+    const hasQuantity = !!item.quantity;
+    const hasDeductible = item.deductible !== '' && parseFloat(item.deductible) > 0;
+    const block = document.createElement('div');
+    block.className = 'item-block';
+    block.innerHTML = `
+      <h4>Item ${index + 1}</h4>
+      
+      <div class="form-field">
+        <label>Item Name</label>
+        <input type="text" value="${item.name}" data-index="${index}" class="name" placeholder="e.g. Great Value Quick Oats Gluten Free" />
+      </div>
+      
+      <div class="form-field ${hasQuantity ? '' : 'hidden'}">
+        <label>Net Weight / Quantity</label>
+        <input type="text" value="${item.quantity}" data-index="${index}" class="quantity" />
+      </div>
+      
+      <div class="form-field">
+        <label>Price (total for item)</label>
+        <div class="input-with-dollar">
+          <span class="dollar-sign">$</span>
+          <input type="number" step="0.01" value="${item.price || ''}" data-index="${index}" class="price" placeholder="e.g. 6.99" />
+        </div>
+      </div>
+      
+      <div class="form-field ${hasRegularPrice ? '' : 'hidden'}">
+        <label>USDA Avg Regular Price (per lb)</label>
+        <input type="number" step="0.01" value="${item.regularPrice || ''}" data-index="${index}" class="regular-price" readonly />
+      </div>
+      
+      <div class="form-field">
+        <label>Category</label>
+        <select data-index="${index}" class="category">
+          <option value="None" ${item.category==='None'?'selected':''}>None</option>
+          <option value="Gluten-Free" ${item.category==='Gluten-Free'?'selected':''}>Gluten-Free</option>
+          <option value="Keto" ${item.category==='Keto'?'selected':''}>Keto</option>
+          <option value="Low-Sodium" ${item.category==='Low-Sodium'?'selected':''}>Low-Sodium</option>
+          <option value="Other" ${item.category==='Other'?'selected':''}>Other</option>
+        </select>
+      </div>
+      
+      <div class="form-field ${hasDeductible ? '' : 'hidden'}">
+        <label>Estimated Deductible (based on USDA averages)</label>
+        <input type="number" step="0.01" value="${item.deductible || ''}" data-index="${index}" class="deductible" readonly />
+      </div>
+      
+      <button class="remove-item" data-index="${index}">Remove Item</button>
+    `;
+    itemsContainer.appendChild(block);
+  });
+
+  // Live updates on input
+  itemsContainer.addEventListener('input', (e) => {
+    const el = e.target;
+    const idx = el.dataset.index;
+    if (el.matches('.price')) {
+      window.currentItems[idx].price = parseFloat(el.value) || 0;
+      window.updateDeductibles();
+    } else if (el.matches('.name')) {
+      window.currentItems[idx].name = el.value;
+      const regularItem = suggestRegularItem(el.value);
+      window.currentItems[idx].regularPrice = suggestRegularPrice(regularItem) || 0;
+      window.currentItems[idx].category = suggestCategory([], el.value);
+      const itemBlock = el.closest('.item-block');
+      if (itemBlock) {
+        const usdaInput = itemBlock.querySelector('.regular-price');
+        if (usdaInput) {
+          usdaInput.value = window.currentItems[idx].regularPrice;
+          usdaInput.parentElement.classList.toggle('hidden', !window.currentItems[idx].regularPrice);
+        }
+        const categorySelect = itemBlock.querySelector('.category');
+        if (categorySelect) {
+          categorySelect.value = window.currentItems[idx].category;
+        }
+      }
+      window.updateDeductibles();
+    } else if (el.matches('.quantity')) {
+      window.currentItems[idx].quantity = el.value;
+      // Recalculate deductible for this item
+      const item = window.currentItems[idx];
+      let deduct = 0;
+      if (item.regularPrice > 0) {
+        if (item.quantity) {
+          const qtyInLb = convertToLb(item.quantity);
+          if (qtyInLb > 0) {
+            const specialtyTotal = item.price || 0;
+            const regularTotal = item.regularPrice * qtyInLb;
+            deduct = specialtyTotal - regularTotal;
+          } else {
+            deduct = (item.price || 0) - item.regularPrice;
+          }
+        } else {
+          deduct = (item.price || 0) - item.regularPrice;
+        }
+      }
+      item.deductible = deduct > 0 ? deduct.toFixed(2) : '0.00';
+      window.updateDeductibles();
+    }
+  });
+
+  itemsContainer.addEventListener('change', (e) => {
+    const el = e.target;
+    if (el.matches('.category')) {
+      const idx = el.dataset.index;
+      window.currentItems[idx].category = el.value;
+      window.updateDeductibles();
+    }
+  });
+
+  itemsContainer.addEventListener('click', (e) => {
+    if (e.target.matches('.remove-item')) {
+      const idx = e.target.dataset.index;
+      window.currentItems.splice(idx, 1);
+      renderItems();
+      updateDeductibles();
+    }
+  });
+}
+
+// Make renderItems and updateDeductibles global
+window.renderItems = renderItems;
+window.updateDeductibles = updateDeductibles;
+
+function updateDeductibles() {
+  let totalDeduct = 0;
+  let hasDeductible = false;
+  window.currentItems.forEach((item, index) => {
+    let deduct = 0;
+    if (item.regularPrice > 0) {
+      if (item.quantity) {
+        const qtyInLb = convertToLb(item.quantity);
+        if (qtyInLb > 0) {
+          const specialtyTotal = item.price || 0;
+          const regularTotal = item.regularPrice * qtyInLb;
+          deduct = specialtyTotal - regularTotal;
+        } else {
+          deduct = (item.price || 0) - item.regularPrice;
+        }
+      } else {
+        deduct = (item.price || 0) - item.regularPrice;
+      }
+      item.deductible = deduct > 0 ? deduct.toFixed(2) : '0.00';
+      totalDeduct += deduct > 0 ? deduct : 0;
+      if (deduct > 0) hasDeductible = true;
+    } else {
+      item.deductible = '0.00';
+    }
+    const deductInput = document.querySelector(`.deductible[data-index="${index}"]`);
+    if (deductInput) {
+      deductInput.value = item.deductible;
+      deductInput.parentElement.classList.toggle('hidden', item.deductible === '0.00');
+    }
+  });
+  const summary = document.getElementById('deductible-summary');
+  if (summary) {
+    summary.style.display = hasDeductible ? 'block' : 'none';
+    const totalSpan = document.getElementById('total-deductible');
+    if (totalSpan) totalSpan.textContent = `$${totalDeduct.toFixed(2)}`;
+  }
+}
+
+// Login from welcome page
+document.getElementById('start-login-btn')?.addEventListener('click', () => {
+  console.log('Login button clicked');
+  localStorage.setItem('deductEatsLoggedIn', 'true');
+  window.location.href = 'home.html';
+});
+
+// Login state check
+function checkLogin() {
+  if (!localStorage.getItem('deductEatsLoggedIn')) {
+    window.location.href = 'welcome.html';
+  }
+}
+
+// Run login check on protected pages
+const currentPath = window.location.pathname.toLowerCase();
+if (!currentPath.endsWith('welcome.html') && !currentPath.endsWith('/')) {
+  checkLogin();
+}
+
+// Logout
+document.getElementById('logout-btn')?.addEventListener('click', () => {
+  if (confirm("Log out?")) {
+    localStorage.removeItem('deductEatsLoggedIn');
+    window.location.href = 'welcome.html';
+  }
+});
+
+// Page detection
+const path = window.location.pathname.toLowerCase().replace(/\/$/, '');
+const filename = path.split('/').pop() || '';
+const isHomePage = filename === 'home.html' || filename === 'index.html' || path === '' || path.includes('home');
+const isHistoryPage = filename === 'history.html' || path.includes('history');
+
 // Home page logic
 if (isHomePage) {
   let currentItems = [];
   let currentDate = '';
   let currentLocation = '';
-  let editingId = null; // Track if editing existing receipt
+  let editingId = null;
 
-  // Make these accessible from home.html script
   window.currentItems = currentItems;
-  window.renderItems = renderItems;
-  window.updateDeductibles = updateDeductibles;
 
   const scanBtn = document.getElementById('barcode-scan-btn');
   const manualBtn = document.getElementById('manual-btn');
@@ -403,7 +602,7 @@ if (isHomePage) {
         if (receipt) {
           document.getElementById('receipt-location').value = receipt.location || '';
           document.getElementById('receipt-date').value = receipt.date || '';
-          currentItems = receipt.items || [];
+          window.currentItems = receipt.items || [];
           renderItems();
           updateDeductibles();
         } else {
