@@ -32,40 +32,41 @@
   <main id="main-content">
     <div class="hero">
       <h1>My Frequent Purchases</h1>
-      <p>Save items you buy often. Select them here to quickly log a new receipt without scanning.</p>
+      <p>Save items you buy often. Select them to instantly log a new receipt — or add new items directly.</p>
     </div>
 
     <!-- Frequent Items List -->
     <section id="frequent-list" style="margin: 32px auto; max-width: 800px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h2>Your List</h2>
-        <button id="add-frequent-btn" class="primary">+ Add Item</button>
+        <button id="add-new-item-btn" class="primary">+ Add New Item</button>
       </div>
+
       <div id="frequent-items-container"></div>
 
-      <!-- Action Buttons -->
+      <!-- Quick Log Action -->
       <div style="margin-top: 24px; text-align: center;">
-        <button id="quick-add-selected" class="primary" disabled>Use Selected Items</button>
+        <button id="quick-log-selected" class="primary" disabled>Instant Log Selected Items</button>
       </div>
     </section>
 
-    <!-- Full Manual Entry Form (replaces simple add modal) -->
-    <section id="quick-log-section" style="display:none; margin: 32px auto; max-width: 800px; padding: 20px; background: #f9f9f9; border-radius: 12px;">
-      <h2 id="quick-log-title">Log New Receipt from My List</h2>
+    <!-- Full Manual Entry Form for Adding/Quick Logging -->
+    <section id="quick-entry-section" style="display:none; margin: 32px auto; max-width: 800px; padding: 24px; background: #f9f9f9; border-radius: 12px;">
+      <h2 id="quick-entry-title">Add New Frequent Item</h2>
       <div class="form-field">
-        <label for="receipt-location">Location</label>
+        <label for="receipt-location">Location (optional)</label>
         <input type="text" id="receipt-location" placeholder="e.g. Walmart Saint George" />
       </div>
       <div class="form-field">
         <label for="receipt-date">Date</label>
-        <input type="date" id="receipt-date" />
+        <input type="date" id="receipt-date" value="" />
       </div>
       <h3>Items</h3>
       <div id="items-container"></div>
       <button id="add-item-btn" class="add-btn">+ Add Item</button>
       <div class="edit-actions">
-        <button id="save-quick-log" class="primary">Save Receipt</button>
-        <button id="cancel-quick-log" class="secondary">Cancel</button>
+        <button id="save-quick-entry" class="primary">Save & Log Receipt</button>
+        <button id="cancel-quick-entry" class="secondary">Cancel</button>
       </div>
       <div id="deductible-summary" style="margin-top:24px; padding:16px; background:#e6f3ff; border-radius:8px; text-align:right; display:none;">
         <strong>Total Estimated Deductible: <span id="total-deductible">$0.00</span></strong>
@@ -87,7 +88,7 @@
 
   <script src="script.js"></script>
 
-  <!-- My List Logic -->
+  <!-- My List + Full Entry Logic -->
   <script>
     const MYLIST_STORE = 'frequentItems';
 
@@ -135,22 +136,22 @@
         container.appendChild(row);
       });
 
-      updateQuickAddButton();
+      updateQuickLogButton();
     }
 
-    function updateQuickAddButton() {
+    function updateQuickLogButton() {
       const checkboxes = document.querySelectorAll('.frequent-checkbox:checked');
-      const button = document.getElementById('quick-add-selected');
+      const button = document.getElementById('quick-log-selected');
       const count = checkboxes.length;
       button.disabled = count === 0;
-      button.textContent = count === 0 ? 'Use Selected Items' : `Use ${count} Selected Item${count !== 1 ? 's' : ''}`;
+      button.textContent = count === 0 ? 'Instant Log Selected Items' : `Instant Log ${count} Item${count !== 1 ? 's' : ''}`;
       button.style.background = count > 0 ? '#4CAF50' : '#ccc';
     }
 
-    // Show full manual entry form for adding/editing
-    document.getElementById('add-frequent-btn')?.addEventListener('click', () => {
-      document.getElementById('quick-log-section').style.display = 'block';
-      document.getElementById('quick-log-title').textContent = 'Add New Frequent Item';
+    // Show full entry form for adding new item
+    document.getElementById('add-new-item-btn')?.addEventListener('click', () => {
+      document.getElementById('quick-entry-section').style.display = 'block';
+      document.getElementById('quick-entry-title').textContent = 'Add New Frequent Item';
       window.currentItems = [];
       document.getElementById('receipt-location').value = '';
       document.getElementById('receipt-date').value = new Date().toISOString().split('T')[0];
@@ -159,12 +160,14 @@
       window.updateDeductibles();
     });
 
-    document.getElementById('cancel-quick-log')?.addEventListener('click', () => {
-      document.getElementById('quick-log-section').style.display = 'none';
+    // Cancel quick entry
+    document.getElementById('cancel-quick-entry')?.addEventListener('click', () => {
+      document.getElementById('quick-entry-section').style.display = 'none';
       window.currentItems = [];
     });
 
-    document.getElementById('save-quick-log')?.addEventListener('click', async () => {
+    // Save from quick entry form (add new frequent OR quick log)
+    document.getElementById('save-quick-entry')?.addEventListener('click', async () => {
       const currentDate = document.getElementById('receipt-date').value;
       const currentLocation = document.getElementById('receipt-location').value;
 
@@ -202,19 +205,18 @@
       try {
         if (!db) await initDB();
         await db.put(STORE_NAME, receipt);
-        alert('Receipt saved from My List!');
-        document.getElementById('quick-log-section').style.display = 'none';
+        alert('Receipt logged successfully!');
+        document.getElementById('quick-entry-section').style.display = 'none';
         window.currentItems = [];
-        loadFrequentItems(); // Refresh list if needed
-        window.location.href = 'history.html'; // Redirect to history
+        window.location.href = 'history.html'; // Go see the new log
       } catch (err) {
         console.error('Save quick log error:', err);
         alert('Error saving receipt.');
       }
     });
 
-    // Quick-add selected items (pre-fill form and save directly)
-    document.getElementById('quick-add-selected')?.addEventListener('click', async () => {
+    // Instant log selected items (no form review)
+    document.getElementById('quick-log-selected')?.addEventListener('click', async () => {
       const checkboxes = document.querySelectorAll('.frequent-checkbox:checked');
       if (checkboxes.length === 0) return;
 
@@ -227,13 +229,14 @@
         const selectedItems = await Promise.all(selectedIds.map(id => store.get(id)));
         await tx.done;
 
-        window.currentItems = selectedItems.map(item => {
+        let totalDeduct = 0;
+        const items = selectedItems.map(item => {
           const regularItem = suggestRegularItem(item.name);
           const regularPrice = suggestRegularPrice(regularItem) || 0;
           const category = suggestCategory([], item.name);
-          let deductible = '0.00';
+
+          let deduct = 0;
           if (regularPrice > 0) {
-            let deduct = 0;
             if (item.quantity) {
               const qtyInLb = convertToLb(item.quantity);
               if (qtyInLb > 0) {
@@ -244,30 +247,35 @@
             } else {
               deduct = (item.price || 0) - regularPrice;
             }
-            deductible = deduct > 0 ? deduct.toFixed(2) : '0.00';
           }
+          totalDeduct += deduct > 0 ? deduct : 0;
 
           return {
             name: item.name,
             price: item.price || 0,
             regularPrice,
             category,
-            deductible,
+            deductible: deduct > 0 ? deduct.toFixed(2) : '0.00',
             quantity: item.quantity || ''
           };
         });
 
-        // Show form with pre-filled items
-        document.getElementById('quick-log-section').style.display = 'block';
-        document.getElementById('quick-log-title').textContent = 'Log Receipt from My List';
-        document.getElementById('receipt-location').value = '';
-        document.getElementById('receipt-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('items-container').innerHTML = '';
-        window.renderItems();
-        window.updateDeductibles();
+        const receipt = {
+          date: new Date().toISOString().split('T')[0],
+          location: 'Frequent Purchase',
+          items,
+          createdAt: new Date().toISOString(),
+          photos: [],
+          totalDeductible: totalDeduct
+        };
+
+        if (!db) await initDB();
+        await db.put(STORE_NAME, receipt);
+        alert(`Logged ${items.length} item${items.length !== 1 ? 's' : ''} from My List!`);
+        window.location.href = 'history.html';
       } catch (err) {
-        console.error('Quick add error:', err);
-        alert('Error loading selected items.');
+        console.error('Instant log error:', err);
+        alert('Error logging receipt.');
       }
     });
 
@@ -297,7 +305,7 @@
     // Enable/disable button when checkboxes change
     document.getElementById('frequent-items-container')?.addEventListener('change', (e) => {
       if (e.target.classList.contains('frequent-checkbox')) {
-        updateQuickAddButton();
+        updateQuickLogButton();
       }
     });
   </script>
