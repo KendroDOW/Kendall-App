@@ -12,7 +12,7 @@ async function initDB() {
 }
 initDB();
 
-// USDA average regular prices (per lb or unit, approximate values)
+// USDA average regular prices
 const usdaRegularPrices = {
   'oats': 0.55,
   'flour': 0.50,
@@ -22,56 +22,19 @@ const usdaRegularPrices = {
   'soup': 1.50,
 };
 
-// Lookup product by barcode using Open Food Facts API
-async function lookupProductByBarcode(barcode) {
-  try {
-    const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
-    const data = await response.json();
-    if (data.status === 1 && data.product) {
-      const product = data.product;
-      let quantity = product.quantity || product.product_quantity || product.serving_size || '';
-      if (!quantity && product.packaging_tags) {
-        quantity = product.packaging_tags.join(', ');
-      }
-      return {
-        name: product.product_name || product.generic_name || 'Unknown Product',
-        brand: product.brands || '',
-        categoryTags: product.categories_tags || product.categories || [],
-        quantity,
-      };
-    } else {
-      return { name: 'Product Not Found', brand: '', categoryTags: [], quantity: '' };
-    }
-  } catch (err) {
-    console.error('Product lookup error:', err);
-    return { name: 'Error Looking Up Product', brand: '', categoryTags: [], quantity: '' };
-  }
-}
-
-// Category suggestion based on keywords in name or tags
+// ----- Global helper functions (available on all pages) -----
 function suggestCategory(tags, itemName = '') {
   const allText = [
     ...(tags || []).join(' ').toLowerCase(),
     (itemName || '').toLowerCase()
   ].join(' ');
-  if (allText.includes('gluten-free') || allText.includes('gluten free')) {
-    return 'Gluten-Free';
-  }
-  if (allText.includes('keto') || allText.includes('low-carb') || allText.includes('low carb')) {
-    return 'Keto';
-  }
-  if (allText.includes('low-sodium') || allText.includes('low sodium') ||
-      allText.includes('reduced sodium') || allText.includes('low salt') ||
-      allText.includes('reduced salt')) {
-    return 'Low-Sodium';
-  }
-  if (allText.includes('vegan') || allText.includes('plant-based')) {
-    return 'Vegan';
-  }
+  if (allText.includes('gluten-free') || allText.includes('gluten free')) return 'Gluten-Free';
+  if (allText.includes('keto') || allText.includes('low-carb') || allText.includes('low carb')) return 'Keto';
+  if (allText.includes('low-sodium') || allText.includes('low sodium') || allText.includes('reduced sodium') || allText.includes('low salt') || allText.includes('reduced salt')) return 'Low-Sodium';
+  if (allText.includes('vegan') || allText.includes('plant-based')) return 'Vegan';
   return 'None';
 }
 
-// Convert quantity string to pounds (lb)
 function convertToLb(quantityStr) {
   if (!quantityStr) return null;
   const match = quantityStr.match(/(\d+(\.\d+)?)\s*(g|oz|lb|kg)/i);
@@ -85,13 +48,10 @@ function convertToLb(quantityStr) {
   return null;
 }
 
-// Suggest regular counterpart for common specialty items
 function suggestRegularItem(itemName) {
   if (!itemName) return '';
   const lowerName = itemName.toLowerCase();
-  if (lowerName.includes('oat') || lowerName.includes('oats')) {
-    return 'oats';
-  }
+  if (lowerName.includes('oat') || lowerName.includes('oats')) return 'oats';
   if (lowerName.includes('flour')) return 'flour';
   if (lowerName.includes('bread')) return 'bread';
   if (lowerName.includes('pasta')) return 'pasta';
@@ -100,16 +60,36 @@ function suggestRegularItem(itemName) {
   return '';
 }
 
-// Suggest regular price from USDA table
 function suggestRegularPrice(regularItem) {
   if (!regularItem) return null;
   const lowerItem = regularItem.toLowerCase();
   for (const [key, price] of Object.entries(usdaRegularPrices)) {
-    if (lowerItem.includes(key)) {
-      return price;
-    }
+    if (lowerItem.includes(key)) return price;
   }
   return null;
+}
+
+// Lookup product by barcode
+async function lookupProductByBarcode(barcode) {
+  try {
+    const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+    const data = await response.json();
+    if (data.status === 1 && data.product) {
+      const product = data.product;
+      let quantity = product.quantity || product.product_quantity || product.serving_size || '';
+      if (!quantity && product.packaging_tags) quantity = product.packaging_tags.join(', ');
+      return {
+        name: product.product_name || product.generic_name || 'Unknown Product',
+        brand: product.brands || '',
+        categoryTags: product.categories_tags || product.categories || [],
+        quantity,
+      };
+    }
+    return { name: 'Product Not Found', brand: '', categoryTags: [], quantity: '' };
+  } catch (err) {
+    console.error('Product lookup error:', err);
+    return { name: 'Error Looking Up Product', brand: '', categoryTags: [], quantity: '' };
+  }
 }
 
 // Get approximate location
@@ -126,13 +106,9 @@ async function getCurrentLocation() {
     const { latitude, longitude } = position.coords;
     const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
     const data = await response.json();
-    if (data.city && data.locality) {
-      return `${data.city}, ${data.principalSubdivision || data.countryName}`;
-    } else if (data.city) {
-      return data.city;
-    } else {
-      return 'Unknown Location';
-    }
+    if (data.city && data.locality) return `${data.city}, ${data.principalSubdivision || data.countryName}`;
+    if (data.city) return data.city;
+    return 'Unknown Location';
   } catch (err) {
     console.warn('Geolocation error:', err);
     return 'Unknown Location';
@@ -157,215 +133,7 @@ function suggestStoreName(city, brandHint = '') {
   return `${city} Grocery Store`;
 }
 
-// Login from welcome page
-document.getElementById('start-login-btn')?.addEventListener('click', () => {
-  console.log('Login button clicked');
-  localStorage.setItem('deductEatsLoggedIn', 'true');
-  window.location.href = 'home.html';
-});
-
-// Login state check
-function checkLogin() {
-  if (!localStorage.getItem('deductEatsLoggedIn')) {
-    window.location.href = 'welcome.html';
-  }
-}
-
-// Run login check on protected pages
-const currentPath = window.location.pathname.toLowerCase();
-if (!currentPath.endsWith('welcome.html') && !currentPath.endsWith('/')) {
-  checkLogin();
-}
-
-// Logout
-document.getElementById('logout-btn')?.addEventListener('click', () => {
-  if (confirm("Log out?")) {
-    localStorage.removeItem('deductEatsLoggedIn');
-    window.location.href = 'welcome.html';
-  }
-});
-
-// Page detection
-const path = window.location.pathname.toLowerCase().replace(/\/$/, '');
-const filename = path.split('/').pop() || '';
-const isHomePage = filename === 'home.html' || filename === 'index.html' || path === '' || path.includes('home');
-const isHistoryPage = filename === 'history.html' || path.includes('history');
-
-// Global attachPhotos function (capture modal)
-async function attachPhotos(receiptId) {
-  let photos = [];
-  const modal = document.getElementById('photo-capture-modal');
-  const preview = document.getElementById('photo-preview');
-  const status = document.getElementById('photo-status');
-  const takeBtn = document.getElementById('take-photo-btn');
-  const saveBtn = document.getElementById('save-photos-btn');
-  const cancelBtn = document.getElementById('cancel-photos-btn');
-  const input = document.getElementById('hidden-camera-input');
-  if (!modal || !input) {
-    console.error('Photo modal or input missing');
-    alert('Photo capture not available.');
-    return;
-  }
-  // Reset
-  photos = [];
-  preview.innerHTML = '<p style="color:#666;">No photo yet</p>';
-  status.textContent = 'Take a photo of your receipt (up to 3)';
-  saveBtn.disabled = true;
-  takeBtn.disabled = false;
-  takeBtn.textContent = 'Take Photo';
-  modal.style.display = 'flex';
-  const takeHandler = () => {
-    input.value = '';
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      console.log('Photo selected, size:', file.size);
-      try {
-        const img = await createImageBitmap(file);
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const maxSize = 1024;
-        let w = img.width;
-        let h = img.height;
-        if (w > h) {
-          if (w > maxSize) { h *= maxSize / w; w = maxSize; }
-        } else {
-          if (h > maxSize) { w *= maxSize / h; h = maxSize; }
-        }
-        canvas.width = w;
-        canvas.height = h;
-        ctx.drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-        photos.push(dataUrl);
-        preview.innerHTML = `<img src="${dataUrl}" style="max-width:100%; max-height:180px; border-radius:8px;">`;
-        status.textContent = `Photo ${photos.length} added (up to 3)`;
-        saveBtn.disabled = false;
-        if (photos.length >= 3) {
-          takeBtn.disabled = true;
-          takeBtn.textContent = 'Max reached';
-        }
-      } catch (err) {
-        console.error('Photo processing error:', err);
-        alert('Error processing photo.');
-      }
-    };
-    input.click();
-  };
-  takeBtn.onclick = takeHandler;
-  saveBtn.onclick = async () => {
-    if (photos.length === 0) return alert('No photos to save.');
-    try {
-      await savePhotos(receiptId, photos);
-      alert('Photos saved successfully!');
-      modal.style.display = 'none';
-    } catch (err) {
-      console.error('Save failed:', err);
-      alert('Error saving photos.');
-    }
-  };
-  cancelBtn.onclick = () => {
-    modal.style.display = 'none';
-  };
-}
-
-// Save photos as base64 strings
-async function savePhotos(receiptId, photos) {
-  try {
-    console.log('Saving photos for receipt ID:', receiptId);
-    console.log('Number of photos:', photos.length);
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const receipt = await store.get(receiptId);
-    if (!receipt) {
-      console.error('Receipt not found:', receiptId);
-      alert('Receipt not found.');
-      return;
-    }
-    receipt.photos = receipt.photos ? receipt.photos.concat(photos) : photos;
-    console.log('Updated receipt photos length:', receipt.photos.length);
-    await store.put(receipt);
-    await tx.done;
-    console.log('Photos saved successfully to receipt:', receiptId);
-  } catch (err) {
-    console.error('Save photos error:', err);
-    alert('Error saving photos. Check console.');
-  }
-}
-
-// View existing photos
-async function viewPhotos(receiptId) {
-  const modal = document.getElementById('photo-viewer-modal');
-  const gallery = document.getElementById('viewer-gallery');
-  gallery.innerHTML = '<p>Loading photos...</p>';
-  if (!modal) {
-    console.error('Viewer modal not found');
-    alert('Viewer not available.');
-    return;
-  }
-  try {
-    const receipt = await db.transaction(STORE_NAME).objectStore(STORE_NAME).get(receiptId);
-    gallery.innerHTML = '';
-    if (!receipt || !receipt.photos || receipt.photos.length === 0) {
-      gallery.innerHTML = '<p>No photos saved for this receipt.</p>';
-      modal.style.display = 'flex';
-      return;
-    }
-    receipt.photos.forEach((dataUrl, index) => {
-      const container = document.createElement('div');
-      container.style.position = 'relative';
-      container.style.margin = '8px';
-      const img = document.createElement('img');
-      img.src = dataUrl;
-      img.style.maxWidth = '200px';
-      img.style.borderRadius = '8px';
-      img.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
-      img.onerror = () => {
-        img.src = 'https://via.placeholder.com/200?text=Broken+Photo';
-      };
-      container.appendChild(img);
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.value = index;
-      checkbox.style.position = 'absolute';
-      checkbox.style.top = '8px';
-      checkbox.style.right = '8px';
-      checkbox.style.width = '20px';
-      checkbox.style.height = '20px';
-      container.appendChild(checkbox);
-      gallery.appendChild(container);
-    });
-    // Add Delete Selected button
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = 'Delete Selected';
-    deleteBtn.style.marginTop = '16px';
-    deleteBtn.style.padding = '10px 20px';
-    deleteBtn.style.background = '#d32f2f';
-    deleteBtn.style.color = 'white';
-    deleteBtn.style.border = 'none';
-    deleteBtn.style.borderRadius = '8px';
-    deleteBtn.style.cursor = 'pointer';
-    deleteBtn.onclick = async () => {
-      const selected = gallery.querySelectorAll('input[type="checkbox"]:checked');
-      if (selected.length === 0) return alert('No photos selected.');
-      if (!confirm(`Delete ${selected.length} selected photo(s)?`)) return;
-      const indices = Array.from(selected).map(cb => Number(cb.value)).sort((a,b) => b-a);
-      const receipt = await db.transaction(STORE_NAME).objectStore(STORE_NAME).get(receiptId);
-      receipt.photos = receipt.photos.filter((_, i) => !indices.includes(i));
-      await savePhotos(receiptId, receipt.photos);
-      alert('Selected photos deleted.');
-      modal.style.display = 'none';
-      loadLogs(); // Refresh list
-    };
-    gallery.appendChild(deleteBtn);
-    modal.style.display = 'flex';
-  } catch (err) {
-    console.error('View photos error:', err);
-    gallery.innerHTML = '<p>Error loading photos.</p>';
-    modal.style.display = 'flex';
-  }
-}
-
-// ----- Global functions (moved outside if blocks so My List can use them) -----
+// Global renderItems and updateDeductibles (used on both home and mylist)
 function renderItems() {
   const itemsContainer = document.getElementById('items-container');
   if (!itemsContainer) return;
@@ -378,17 +146,14 @@ function renderItems() {
     block.className = 'item-block';
     block.innerHTML = `
       <h4>Item ${index + 1}</h4>
-      
       <div class="form-field">
         <label>Item Name</label>
         <input type="text" value="${item.name}" data-index="${index}" class="name" placeholder="e.g. Great Value Quick Oats Gluten Free" />
       </div>
-      
       <div class="form-field ${hasQuantity ? '' : 'hidden'}">
         <label>Net Weight / Quantity</label>
         <input type="text" value="${item.quantity}" data-index="${index}" class="quantity" />
       </div>
-      
       <div class="form-field">
         <label>Price (total for item)</label>
         <div class="input-with-dollar">
@@ -396,12 +161,10 @@ function renderItems() {
           <input type="number" step="0.01" value="${item.price || ''}" data-index="${index}" class="price" placeholder="e.g. 6.99" />
         </div>
       </div>
-      
       <div class="form-field ${hasRegularPrice ? '' : 'hidden'}">
         <label>USDA Avg Regular Price (per lb)</label>
         <input type="number" step="0.01" value="${item.regularPrice || ''}" data-index="${index}" class="regular-price" readonly />
       </div>
-      
       <div class="form-field">
         <label>Category</label>
         <select data-index="${index}" class="category">
@@ -412,18 +175,16 @@ function renderItems() {
           <option value="Other" ${item.category==='Other'?'selected':''}>Other</option>
         </select>
       </div>
-      
       <div class="form-field ${hasDeductible ? '' : 'hidden'}">
         <label>Estimated Deductible (based on USDA averages)</label>
         <input type="number" step="0.01" value="${item.deductible || ''}" data-index="${index}" class="deductible" readonly />
       </div>
-      
       <button class="remove-item" data-index="${index}">Remove Item</button>
     `;
     itemsContainer.appendChild(block);
   });
 
-  // Live updates on input
+  // Re-attach input listeners every time we render
   itemsContainer.addEventListener('input', (e) => {
     const el = e.target;
     const idx = el.dataset.index;
@@ -450,7 +211,6 @@ function renderItems() {
       window.updateDeductibles();
     } else if (el.matches('.quantity')) {
       window.currentItems[idx].quantity = el.value;
-      // Recalculate deductible for this item
       const item = window.currentItems[idx];
       let deduct = 0;
       if (item.regularPrice > 0) {
@@ -491,10 +251,6 @@ function renderItems() {
   });
 }
 
-// Make renderItems and updateDeductibles global
-window.renderItems = renderItems;
-window.updateDeductibles = updateDeductibles;
-
 function updateDeductibles() {
   let totalDeduct = 0;
   let hasDeductible = false;
@@ -533,6 +289,10 @@ function updateDeductibles() {
   }
 }
 
+// Attach globals
+window.renderItems = renderItems;
+window.updateDeductibles = updateDeductibles;
+
 // Login from welcome page
 document.getElementById('start-login-btn')?.addEventListener('click', () => {
   console.log('Login button clicked');
@@ -540,17 +300,16 @@ document.getElementById('start-login-btn')?.addEventListener('click', () => {
   window.location.href = 'home.html';
 });
 
-// Login state check
+// Login state check (only one declaration!)
+const currentPath = window.location.pathname.toLowerCase();
+if (!currentPath.endsWith('welcome.html') && !currentPath.endsWith('/')) {
+  checkLogin();
+}
+
 function checkLogin() {
   if (!localStorage.getItem('deductEatsLoggedIn')) {
     window.location.href = 'welcome.html';
   }
-}
-
-// Run login check on protected pages
-const currentPath = window.location.pathname.toLowerCase();
-if (!currentPath.endsWith('welcome.html') && !currentPath.endsWith('/')) {
-  checkLogin();
 }
 
 // Logout
